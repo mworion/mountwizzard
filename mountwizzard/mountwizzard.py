@@ -54,8 +54,15 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import numpy
 import math
 # application handling
-from winreg import *
 import platform
+if platform.system() == 'Windows':
+    from winreg import *
+elif platform.system() == 'Linux':
+    pass
+elif platform.system() == 'Darwin':
+    raise Exception("TODO %s" % platform.system())
+else:
+    raise Exception("No support yet for %s" % platform.system())
 
 
 class ShowModel(FigureCanvas):
@@ -161,12 +168,14 @@ class MountWizzardApp(MwWidget):
         self.ui.btn_setSlewRate.clicked.connect(self.setSlewRate)
         self.ui.btn_setDualTracking.clicked.connect(self.setDualTracking)
         self.ui.btn_setUnattendedFlip.clicked.connect(self.setUnattendedFlip)
-        self.ui.btn_setupMountDriver.clicked.connect(self.mount.MountAscom.setupDriver)
+        if platform.system() == 'Windows':
+            self.ui.btn_setupMountDriver.clicked.connect(self.mount.MountAscom.setupDriver)
         self.ui.btn_setupDomeDriver.clicked.connect(lambda: self.dome.setupDriver())
         self.ui.btn_setupStickDriver.clicked.connect(lambda: self.stick.setupDriver())
         self.ui.btn_setupUnihedronDriver.clicked.connect(lambda: self.unihedron.setupDriver())
         self.ui.btn_setupWeatherDriver.clicked.connect(lambda: self.weather.setupDriver())
-        self.ui.btn_setupAscomCameraDriver.clicked.connect(lambda: self.model.AscomCamera.setupDriverCamera())
+        if platform.system() == 'Windows':
+            self.ui.btn_setupAscomCameraDriver.clicked.connect(lambda: self.model.AscomCamera.setupDriverCamera())
         self.ui.btn_setRefractionParameters.clicked.connect(lambda: self.commandQueue.put('SetRefractionParameter'))
         self.ui.btn_runBaseModel.clicked.connect(lambda: self.model.signalModelCommand.emit('RunBaseModel'))
         self.ui.btn_cancelModel.clicked.connect(lambda: self.model.signalModelCommand.emit('CancelModel'))
@@ -227,7 +236,8 @@ class MountWizzardApp(MwWidget):
         self.ui.btn_switchHeater.clicked.connect(lambda: self.relays.switchHeater())
         self.ui.rb_cameraSGPro.clicked.connect(lambda: self.model.signalModelCommand.emit('CameraPlateChooser'))
         self.ui.rb_cameraTSX.clicked.connect(lambda: self.model.signalModelCommand.emit('CameraPlateChooser'))
-        self.ui.rb_cameraASCOM.clicked.connect(lambda: self.model.signalModelCommand.emit('CameraPlateChooser'))
+        if platform.system() == 'Windows':
+            self.ui.rb_cameraASCOM.clicked.connect(lambda: self.model.signalModelCommand.emit('CameraPlateChooser'))
         self.ui.rb_cameraMaximDL.clicked.connect(lambda: self.model.signalModelCommand.emit('CameraPlateChooser'))
         self.ui.rb_cameraNone.clicked.connect(lambda: self.model.signalModelCommand.emit('CameraPlateChooser'))
         self.ui.btn_appCameraConnect.clicked.connect(lambda: self.model.signalModelCommand.emit('ConnectCamera'))
@@ -240,7 +250,8 @@ class MountWizzardApp(MwWidget):
         self.ui.btn_downloadComets.clicked.connect(lambda: self.commandDataQueue.put('COMETS'))
         self.ui.btn_downloadAll.clicked.connect(lambda: self.commandDataQueue.put('ALL'))
         self.ui.btn_uploadMount.clicked.connect(lambda: self.commandDataQueue.put('UPLOADMOUNT'))
-        self.ui.rb_ascomMount.clicked.connect(self.mount.mountDriverChooser)
+        if platform.system() == 'Windows':
+            self.ui.rb_ascomMount.clicked.connect(self.mount.mountDriverChooser)
         self.ui.rb_directMount.clicked.connect(self.mount.mountDriverChooser)
 
     def showModelErrorPolar(self):
@@ -285,46 +296,49 @@ class MountWizzardApp(MwWidget):
         self.modelWidget.draw()
 
     def checkASCOM(self):
-        appAvailable, appName, appInstallPath = self.checkRegistrationKeys('ASCOM Platform')
-        if appAvailable:
-            self.messageQueue.put('Found: {0}'.format(appName))
-            self.logger.debug('checkApplicatio-> Name: {0}, Path: {1}'.format(appName, appInstallPath))
-        else:
+        if platform.system() == 'Windows':
+            appAvailable, appName, appInstallPath = self.checkRegistrationKeys('ASCOM Platform')
+            if appAvailable:
+                self.messageQueue.put('Found: {0}'.format(appName))
+                self.logger.debug('checkApplicatio-> Name: {0}, Path: {1}'.format(appName, appInstallPath))
+            else:
+                self.logger.error('checkApplicatio-> Application ASCOM not found on computer')
             self.logger.error('checkApplicatio-> Application ASCOM not found on computer')
 
     @staticmethod
     def checkRegistrationKeys(appSearchName):
-        if platform.machine().endswith('64'):
-            regPath = 'SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall'                                # regpath for 64 bit windows
-        else:
-            regPath = 'SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall'                                             # regpath for 32 bit windows
-        try:
-            appInstallPath = ''
-            appInstalled = False
-            key = OpenKey(HKEY_LOCAL_MACHINE, regPath)                                                                      # open registry
-            for i in range(0, QueryInfoKey(key)[0]):                                                                        # run through all registry application
-                name = EnumKey(key, i)                                                                                      # get registry names of applications
-                subkey = OpenKey(key, name)                                                                                 # open subkeys of applications
-                for j in range(0, QueryInfoKey(subkey)[1]):                                                                 # run through all subkeys
-                    values = EnumValue(subkey, j)
-                    if values[0] == 'DisplayName':
-                        appName = values[1]
-                    if values[0] == 'InstallLocation':
-                        appInstallPath = values[1]
-                if appSearchName in appName:
-                    appInstalled = True
-                    CloseKey(subkey)
-                    break
-                else:
-                    CloseKey(subkey)                                                                                        # closing the subkey for later usage
-            CloseKey(key)                                                                                                   # closing main key for later usage
-            if not appInstalled:
+        if platform.system() == 'Windows':
+            if platform.machine().endswith('64'):
+                regPath = 'SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall'                            # regpath for 64 bit windows
+            else:
+                regPath = 'SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall'                                         # regpath for 32 bit windows
+            try:
                 appInstallPath = ''
-                appName = ''
-        except Exception as e:
-            print(e)
-        finally:
-            return appInstalled, appName, appInstallPath
+                appInstalled = False
+                key = OpenKey(HKEY_LOCAL_MACHINE, regPath)                                                                  # open registry
+                for i in range(0, QueryInfoKey(key)[0]):                                                                    # run through all registry application
+                    name = EnumKey(key, i)                                                                                  # get registry names of applications
+                    subkey = OpenKey(key, name)                                                                             # open subkeys of applications
+                    for j in range(0, QueryInfoKey(subkey)[1]):                                                             # run through all subkeys
+                        values = EnumValue(subkey, j)
+                        if values[0] == 'DisplayName':
+                            appName = values[1]
+                        if values[0] == 'InstallLocation':
+                            appInstallPath = values[1]
+                    if appSearchName in appName:
+                        appInstalled = True
+                        CloseKey(subkey)
+                        break
+                    else:
+                        CloseKey(subkey)                                                                                    # closing the subkey for later usage
+                CloseKey(key)                                                                                               # closing main key for later usage
+                if not appInstalled:
+                    appInstallPath = ''
+                    appName = ''
+            except Exception as e:
+                print(e)
+            finally:
+                return appInstalled, appName, appInstallPath
 
     def initConfig(self):
         try:
@@ -384,8 +398,9 @@ class MountWizzardApp(MwWidget):
                 self.ui.rb_cameraTSX.setChecked(self.config['CameraTSX'])
             if 'CameraSGPro' in self.config:
                 self.ui.rb_cameraSGPro.setChecked(self.config['CameraSGPro'])
-            if 'CameraASCOM' in self.config:
-                self.ui.rb_cameraASCOM.setChecked(self.config['CameraASCOM'])
+            if platform.system() == 'Windows':
+                if 'CameraASCOM' in self.config:
+                    self.ui.rb_cameraASCOM.setChecked(self.config['CameraASCOM'])
             if 'CameraMaximDL' in self.config:
                 self.ui.rb_cameraMaximDL.setChecked(self.config['CameraMaximDL'])
             if 'CameraNone' in self.config:
@@ -470,8 +485,9 @@ class MountWizzardApp(MwWidget):
                 self.ui.le_relayIP.setText(self.config['RelayIP'])
             if 'DirectMount' in self.config:
                 self.ui.rb_directMount.setChecked(self.config['DirectMount'])
-            if 'AscomMount' in self.config:
-                self.ui.rb_ascomMount.setChecked(self.config['AscomMount'])
+            if platform.system() == 'Windows':
+                if 'AscomMount' in self.config:
+                    self.ui.rb_ascomMount.setChecked(self.config['AscomMount'])
             if 'WindowPositionX' in self.config:
                 self.move(self.config['WindowPositionX'], self.config['WindowPositionY'])
         except Exception as e:
@@ -505,7 +521,8 @@ class MountWizzardApp(MwWidget):
         self.config['AltitudeMinimumHorizon'] = self.ui.altitudeMinimumHorizon.value()
         self.config['CameraTSX'] = self.ui.rb_cameraTSX.isChecked()
         self.config['CameraSGPro'] = self.ui.rb_cameraSGPro.isChecked()
-        self.config['CameraASCOM'] = self.ui.rb_cameraASCOM.isChecked()
+        if platform.system() == 'Windows':
+            self.config['CameraASCOM'] = self.ui.rb_cameraASCOM.isChecked()
         self.config['CameraMaximDL'] = self.ui.rb_cameraMaximDL.isChecked()
         self.config['CameraNone'] = self.ui.rb_cameraNone.isChecked()
         self.config['CheckAutoStartApp'] = self.ui.checkAutoStartApp.isChecked()
@@ -550,7 +567,8 @@ class MountWizzardApp(MwWidget):
         self.config['CheckClearModelFirst'] = self.ui.checkClearModelFirst.isChecked()
         self.config['CheckKeepRefinement'] = self.ui.checkKeepRefinement.isChecked()
         self.config['DirectMount'] = self.ui.rb_directMount.isChecked()
-        self.config['AscomMount'] = self.ui.rb_ascomMount.isChecked()
+        if platform.system() == 'Windows':
+            self.config['AscomMount'] = self.ui.rb_ascomMount.isChecked()
 
     def loadConfig(self):
         try:
