@@ -130,7 +130,7 @@
     <string>Tab section</string>
    </property>
    <property name="currentIndex">
-    <number>2</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tab_2">
     <attribute name="title">
@@ -4274,7 +4274,7 @@ color: rgb(255,255,255);</string>
       <rect>
        <x>180</x>
        <y>400</y>
-       <width>141</width>
+       <width>271</width>
        <height>31</height>
       </rect>
      </property>
@@ -4983,22 +4983,6 @@ color: rgb(255,255,255);</string>
      </property>
      <property name="text">
       <string>Do Simulation</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="btn_runBoostModel">
-     <property name="geometry">
-      <rect>
-       <x>330</x>
-       <y>400</y>
-       <width>121</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="toolTip">
-      <string>Run refinment model</string>
-     </property>
-     <property name="text">
-      <string>Run Boost Model</string>
      </property>
     </widget>
    </widget>
@@ -11876,6 +11860,22 @@ color: rgb(255,255,255);</string>
        </property>
        <property name="text">
         <string>Firmware:</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btn_runBoostModel">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>310</y>
+         <width>121</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>Run refinment model</string>
+       </property>
+       <property name="text">
+        <string>Run Boost Model</string>
        </property>
       </widget>
      </widget>

@@ -173,7 +173,7 @@ class MountWizzardApp(widget.MwWidget):
         self.ui.btn_cancelModel.clicked.connect(self.modeling.cancelModeling)
         self.ui.btn_cancelAnalyseModel.clicked.connect(self.modeling.cancelAnalyseModeling)
         self.ui.btn_runRefinementModel.clicked.connect(lambda: self.modelCommandQueue.put('RunRefinementModel'))
-        self.ui.btn_runBoostModel.clicked.connect(lambda: self.modelCommandQueue.put('RunBoostModel'))
+        # self.ui.btn_runBoostModel.clicked.connect(lambda: self.modelCommandQueue.put('RunBoostModel'))
         self.ui.btn_runBatchModel.clicked.connect(lambda: self.modelCommandQueue.put('RunBatchModel'))
         self.ui.btn_clearAlignmentModel.clicked.connect(lambda: self.modelCommandQueue.put('ClearAlignmentModel'))
         self.ui.btn_selectHorizonPointsFileName.clicked.connect(self.modelWindow.selectHorizonPointsFileName)
