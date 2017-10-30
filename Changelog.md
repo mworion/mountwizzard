@@ -2,6 +2,8 @@
 2.5.16
 - bugfix in platesolvesync
 - enabling parallel precessing
+- bugfix load old data
+
 
 2.5.15
 - refactoring threads

@@ -148,6 +148,8 @@ class Analyse:
         resultData = dict()
         for timestepdict in dataJson:
             for (keyData, valueData) in timestepdict.items():
+                if keyData == 'azimuth':
+                    return {}
                 if keyData in resultData:
                     resultData[keyData].append(valueData)
                 else:

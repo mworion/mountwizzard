@@ -260,6 +260,8 @@ class MountWizzardApp(widget.MwWidget):
         data = dict()
         for i in range(0, len(self.modeling.modelData)):
             for (keyData, valueData) in self.modeling.modelData[i].items():
+                if keyData == 'azimuth':
+                    return
                 if keyData in data:
                     data[keyData].append(valueData)
                 else:

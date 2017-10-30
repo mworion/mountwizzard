@@ -427,9 +427,9 @@ class Mount(PyQt5.QtCore.QThread):
                 alignModel = self.getAlignmentModel()
                 self.app.modeling.modelData.pop(index)
                 for i in range(0, alignModel['number']):
-                    self.app.modeling.modelData[i]['modelError'] = float(alignModel['points'][i][5])
-                    self.app.modeling.modelData[i]['raError'] = self.app.modeling.modelData[i]['modelError'] * math.sin(math.radians(float(alignModel['points'][i][6])))
-                    self.app.modeling.modelData[i]['decError'] = self.app.modeling.modelData[i]['modelError'] * math.cos(math.radians(float(alignModel['points'][i][6])))
+                    self.app.modeling.modelData[i]['ModelError'] = float(alignModel['points'][i][5])
+                    self.app.modeling.modelData[i]['RaError'] = self.app.modeling.modelData[i]['ModelError'] * math.sin(math.radians(float(alignModel['points'][i][6])))
+                    self.app.modeling.modelData[i]['DecError'] = self.app.modeling.modelData[i]['ModelError'] * math.cos(math.radians(float(alignModel['points'][i][6])))
                 self.showAlignmentModel(alignModel)
             else:
                 self.logger.warning('Point {0} could not be deleted').format(index)
@@ -680,9 +680,9 @@ class Mount(PyQt5.QtCore.QThread):
             self.app.messageQueue.put('Model Data will be reconstructed from Mount Data')
             self.app.modeling.modelData = []
             for i in range(0, alignModel['number']):
-                self.app.modeling.modelData.append({'modelError': float(alignModel['points'][i][5]),
-                                                    'raError': float(alignModel['points'][i][5]) * math.sin(math.radians(alignModel['points'][i][6])),
-                                                    'decError': float(alignModel['points'][i][5]) * math.cos(math.radians(alignModel['points'][i][6])),
-                                                    'azimuth': float(alignModel['points'][i][3]),
-                                                    'altitude': float(alignModel['points'][i][4])})
+                self.app.modeling.modelData.append({'ModelError': float(alignModel['points'][i][5]),
+                                                    'RaError': float(alignModel['points'][i][5]) * math.sin(math.radians(alignModel['points'][i][6])),
+                                                    'DecError': float(alignModel['points'][i][5]) * math.cos(math.radians(alignModel['points'][i][6])),
+                                                    'Azimuth': float(alignModel['points'][i][3]),
+                                                    'Altitude': float(alignModel['points'][i][4])})
         self.showAlignmentModel(alignModel)
