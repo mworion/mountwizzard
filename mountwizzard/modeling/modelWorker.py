@@ -87,9 +87,12 @@ class ModelWorker:
                 simulation = self.app.ui.checkSimulation.isChecked()
                 keepImages = self.app.ui.checkKeepImages.isChecked()
                 refinePoints = self.runModel('Refinement', self.app.modeling.modelPoints.RefinementPoints, directory, settlingTime, simulation, keepImages)
-                for i in range(0, len(refinePoints)):
-                    refinePoints[i]['index'] += len(self.modelData)
-                self.modelData = self.modelData + refinePoints
+                if self.app.ui.checkKeepRefinement.isChecked():
+                    for i in range(0, len(refinePoints)):
+                        refinePoints[i]['Index'] += len(self.modelData)
+                    self.modelData = self.modelData + refinePoints
+                else:
+                    self.modelData = refinePoints
                 self.modelData = self.app.mount.retrofitMountData(self.modelData)
                 name = directory + '_refinement.dat'
                 if len(self.modelData) > 0:
@@ -174,7 +177,7 @@ class ModelWorker:
         self.app.modelLogQueue.put('{0} - Start Batch modeling. Saving Actual modeling to BATCH\n'.format(self.timeStamp()))
         self.app.mount.mountHandler.sendCommand('newalig')
         self.app.modelLogQueue.put('{0} - \tOpening Calculation\n'.format(self.timeStamp()))
-        for i in range(0, len(data['index'])):
+        for i in range(0, len(data['Index'])):
             command = 'newalpt{0},{1},{2},{3},{4},{5}'.format(self.app.modeling.transform.decimalToDegree(data['RaJNow'][i], False, True),
                                                               self.app.modeling.transform.decimalToDegree(data['DecJNow'][i], True, False),
                                                               data['pierside'][i],

@@ -1,9 +1,12 @@
 # Changelog
+2.5.17
+- bugfix keep refinement model
+- bugfix index key wrong
+
 2.5.16
 - bugfix in platesolvesync
 - enabling parallel precessing
 - bugfix load old data
-
 
 2.5.15
 - refactoring threads
