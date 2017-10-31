@@ -133,7 +133,8 @@ class ModelPoints:
         return msg
 
     def isAboveHorizonLine(self, point):                                                                                    # check, if point is above horizon list (by horizon file)
-        if len(self.horizonPoints) > 0:                                                                                     # check if there are horizon points
+        length = len(self.horizonPoints)
+        if length > 0 and point[0] < length:                                                                                # check if there are horizon points and fit into list
             if point[1] > self.horizonPoints[int(point[0])][1]:                                                             # simple comparison. important: each Int(az) has value set
                 return True                                                                                                 # point is above -> True
             else:                                                                                                           #

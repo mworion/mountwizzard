@@ -57,25 +57,6 @@ class MwWidget(QWidget):
         self.showStatus = False
         self.initUI()                                                                                                       # adapt the window to our purpose
 
-    def mousePressEvent(self, mouseEvent):                                                                                  # overloading the mouse events for handling customized windows
-        self.modifiers = mouseEvent.modifiers()
-        if mouseEvent.button() == Qt.LeftButton:
-            self.moving = True
-            self.offset = mouseEvent.pos()
-        if mouseEvent.button() == Qt.RightButton:
-            self.moving = False
-
-    def mouseMoveEvent(self, mouseEvent):
-        if self.moving:
-            cursor = QCursor()
-            self.move(cursor.pos() - self.offset)
-
-    def mouseReleaseEvent(self, mouseEvent):
-        if self.moving:
-            cursor = QCursor()
-            self.move(cursor.pos() - self.offset)
-        self.moving = False
-
     def closeEvent(self, closeEvent):
         self.showStatus = False
 

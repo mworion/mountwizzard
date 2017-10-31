@@ -2,6 +2,8 @@
 2.5.17
 - bugfix keep refinement model
 - bugfix index key wrong
+- update for jerky mouse movements
+- robustness for error reported be barry
 
 2.5.16
 - bugfix in platesolvesync

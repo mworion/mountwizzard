@@ -44,7 +44,7 @@ class Slewpoint(PyQt5.QtCore.QObject):
     signalSlewing = PyQt5.QtCore.pyqtSignal(name='slew')
 
     def __init__(self, main):
-        PyQt5.QtCore.QThread.__init__(self)
+        super(PyQt5.QtCore.QObject, self).__init__()
         self.main = main
         self.isRunning = True
         self.signalSlewing.connect(self.slewing)
@@ -77,7 +77,7 @@ class Image(PyQt5.QtCore.QObject):
     signalImaging = PyQt5.QtCore.pyqtSignal(name='image')
 
     def __init__(self, main):
-        PyQt5.QtCore.QThread.__init__(self)
+        super(PyQt5.QtCore.QObject, self).__init__()
         self.main = main
         self.isRunning = True
         self.signalImaging.connect(self.imaging)
@@ -112,7 +112,7 @@ class Platesolve(PyQt5.QtCore.QObject):
     signalPlatesolve = PyQt5.QtCore.pyqtSignal(name='plate')
 
     def __init__(self, main):
-        PyQt5.QtCore.QThread.__init__(self)
+        super(PyQt5.QtCore.QObject, self).__init__()
         self.main = main
         self.isRunning = True
         self.signalPlatesolve.connect(self.platesolving)
@@ -150,7 +150,7 @@ class Modeling(PyQt5.QtCore.QThread):
     CYCLESTATUSFAST = 1000
 
     def __init__(self, app):
-        super().__init__()
+        super(PyQt5.QtCore.QThread, self).__init__()
         # make main sources available
         self.app = app
         self.isRunning = True
