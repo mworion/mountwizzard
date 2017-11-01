@@ -1,4 +1,7 @@
 # Changelog
+2.5.18
+- some more bugfixes discovered by further development
+
 2.5.17
 - bugfix keep refinement model
 - bugfix index key wrong
