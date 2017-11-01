@@ -180,7 +180,7 @@ class ModelWorker:
         for i in range(0, len(data['Index'])):
             command = 'newalpt{0},{1},{2},{3},{4},{5}'.format(self.app.modeling.transform.decimalToDegree(data['RaJNow'][i], False, True),
                                                               self.app.modeling.transform.decimalToDegree(data['DecJNow'][i], True, False),
-                                                              data['pierside'][i],
+                                                              data['Pierside'][i],
                                                               self.app.modeling.transform.decimalToDegree(data['RaJNowSolved'][i], False, True),
                                                               self.app.modeling.transform.decimalToDegree(data['DecJNowSolved'][i], True, False),
                                                               self.app.modeling.ttransform.decimalToDegree(data['LocalSiderealTimeFloat'][i], False, True))
