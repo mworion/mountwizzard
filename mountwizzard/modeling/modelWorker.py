@@ -183,7 +183,7 @@ class ModelWorker:
                                                               data['Pierside'][i],
                                                               self.app.modeling.transform.decimalToDegree(data['RaJNowSolved'][i], False, True),
                                                               self.app.modeling.transform.decimalToDegree(data['DecJNowSolved'][i], True, False),
-                                                              self.app.modeling.ttransform.decimalToDegree(data['LocalSiderealTimeFloat'][i], False, True))
+                                                              self.app.modeling.transform.decimalToDegree(data['LocalSiderealTimeFloat'][i], False, True))
             reply = self.app.mount.mountHandler.sendCommand(command)
             if reply == 'E':
                 self.logger.warning('point {0} could not be added'.format(reply))
@@ -422,9 +422,8 @@ class ModelWorker:
         if not os.path.isdir(modelData['BaseDirImages']):
             os.makedirs(modelData['BaseDirImages'])
         modelData['File'] = 'platesolvesync.fit'
-        modelData['LocalSiderealTime'] = self.app.mount.sidereal_time[0:9]
-        modelData['LocalSiderealTimeFloat'] = self.app.modeling.transform.degStringToDecimal(
-            self.app.mount.sidereal_time[0:9])
+        modelData['LocalSiderealTime'] = self.app.mount.data['LocalSiderealTime'][0:9]
+        modelData['LocalSiderealTimeFloat'] = self.app.modeling.transform.degStringToDecimal(modelData['LocalSiderealTime'])
         modelData['RaJ2000'] = self.app.mount.data['RaJ2000']
         modelData['DecJ2000'] = self.app.mount.data['DecJ2000']
         modelData['RaJNow'] = self.app.mount.data['RaJNow']
