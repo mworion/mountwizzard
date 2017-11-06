@@ -399,6 +399,7 @@ class Modeling(PyQt5.QtCore.QThread):
             elif command == 'DeletePoints':
                 self.modelPoints.deletePoints()
                 self.signalModelRedraw.emit(True)
+            time.sleep(0.2)
             PyQt5.QtWidgets.QApplication.processEvents()
 
     def stop(self):

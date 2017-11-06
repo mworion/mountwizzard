@@ -1,4 +1,8 @@
 # Changelog
+2.5.19
+- performance optimizations
+- bugfixes
+
 2.5.18
 - some more bugfixes discovered by further development
 
