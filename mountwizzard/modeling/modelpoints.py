@@ -112,7 +112,7 @@ class ModelPoints:
         if line_check:
             minAlt = int(line_value)
             if len(hp) == 0:                                                                                                # there is no file loaded
-                hp = ((0, minAlt), (359, minAlt))
+                hp = [(0, minAlt), (359, minAlt)]
         az_last = 0                                                                                                         # starting azimuth
         alt_last = 0                                                                                                        # starting altitude
         for i in range(0, len(hp)):                                                                                         # run through all points an link them via line
