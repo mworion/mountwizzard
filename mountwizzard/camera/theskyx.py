@@ -28,6 +28,7 @@ class TheSkyX(MWCamera):
         self.port = 3040
         self.responseSuccess = '|No error. Error = 0.'
         self.appExe = 'TheSkyX.exe'
+        self.checkAppInstall()
 
     def checkAppInstall(self):
         if platform.system() == 'Windows':
@@ -92,16 +93,16 @@ class TheSkyX(MWCamera):
             tsxSocket.close()
 
     def solveImage(self, modelData):
-        if modelData['blind']:
+        if modelData['Blind']:
             self.logger.warning('Blind mode is not supported. TheSkyX allows to switch to All Sky Image Link by scripting. Please, enable All Sky Image Link manually in TheSkyX')
 
         try:
             command = '/* Java Script */'
             command += 'ccdsoftCamera.Asynchronous=0;'
-            command += 'ImageLink.pathToFITS="' + str(modelData['imagepath']).replace('\\', '/') + '";'
-            if modelData['scaleHint']:
+            command += 'ImageLink.pathToFITS="' + str(modelData['ImagePath']).replace('\\', '/') + '";'
+            if modelData['ScaleHint']:
                 command += 'ImageLink.unknownScale=0;'
-                command += 'ImageLink.scale=' + str(modelData['scaleHint']) + ';'
+                command += 'ImageLink.scale=' + str(modelData['ScaleHint']) + ';'
             else:
                 command += 'ImageLink.unknownScale=1;'
                 command += 'ImageLink.scale=2;'
@@ -116,11 +117,11 @@ class TheSkyX(MWCamera):
                 captureResponse = json.loads(response)
 
                 if captureResponse['succeeded'] == '1':
-                    modelData['dec_sol'] = float(captureResponse['imageCenterDecJ2000'])
-                    modelData['ra_sol'] = float(captureResponse['imageCenterRAJ2000'])
-                    modelData['scale'] = float(captureResponse['imageScale'])
-                    modelData['angle'] = float(captureResponse['imagePositionAngle'])
-                    modelData['timeTS'] = solveTime
+                    modelData['RaJ2000Solved'] = float(captureResponse['imageCenterRAJ2000'])
+                    modelData['DecJ2000Solved'] = float(captureResponse['imageCenterDecJ2000'])
+                    modelData['Scale'] = float(captureResponse['imageScale'])
+                    modelData['Angle'] = float(captureResponse['imagePositionAngle'])
+                    modelData['TimeTS'] = solveTime
                     return True, 'Solved', modelData
                 else:
                     return False, 'Unsolved', modelData
@@ -136,24 +137,24 @@ class TheSkyX(MWCamera):
         try:
             command = '/* Java Script */'
             command += 'ccdsoftCamera.Asynchronous=0;'
-            if modelData['canSubframe']:
+            if modelData['CanSubframe']:
                 command += 'ccdsoftCamera.Subframe=1;'
-                command += 'ccdsoftCamera.SubframeLeft=' + str(modelData['offX']) + ';'
-                command += 'ccdsoftCamera.SubframeTop=' + str(modelData['offY']) + ';'
-                command += 'ccdsoftCamera.SubframeRight=' + str(modelData['offX'] + modelData['sizeX']) + ';'
-                command += 'ccdsoftCamera.SubframeBottom=' + str(modelData['offY'] + modelData['sizeY']) + ';'
+                command += 'ccdsoftCamera.SubframeLeft=' + str(modelData['OffX']) + ';'
+                command += 'ccdsoftCamera.SubframeTop=' + str(modelData['OffY']) + ';'
+                command += 'ccdsoftCamera.SubframeRight=' + str(modelData['OffX'] + modelData['SizeX']) + ';'
+                command += 'ccdsoftCamera.SubframeBottom=' + str(modelData['OffY'] + modelData['SizeY']) + ';'
             else:
                 command += 'ccdsoftCamera.Subframe=0;'
 
-            if modelData['speed'] == 'HiSpeed':
+            if modelData['Speed'] == 'HiSpeed':
                 command += 'ccdsoftCamera.setPropStr("m_csExCameraMode", "Fast Image Download");'
             else:
                 command += 'ccdsoftCamera.setPropStr("m_csExCameraMode", "High Image Quality");'
 
-            command += 'ccdsoftCamera.BinX='+str(modelData['binning'])+';'
-            command += 'ccdsoftCamera.BinY='+str(modelData['binning'])+';'
-            command += 'ccdsoftCamera.ExposureTime='+str(modelData['exposure'])+';'
-            command += 'ccdsoftCamera.AutoSavePath="'+str(modelData['base_dir_images'])+'";'
+            command += 'ccdsoftCamera.BinX='+str(modelData['Binning'])+';'
+            command += 'ccdsoftCamera.BinY='+str(modelData['Binning'])+';'
+            command += 'ccdsoftCamera.ExposureTime='+str(modelData['Exposure'])+';'
+            command += 'ccdsoftCamera.AutoSavePath="'+str(modelData['BaseDirImages'])+'";'
             command += 'ccdsoftCamera.AutoSaveOn=1;'
             command += 'ccdsoftCamera.Frame="cdLight";'
             command += 'ccdsoftCamera.TakeImage();'
@@ -161,7 +162,7 @@ class TheSkyX(MWCamera):
             command += 'Out=ccdsoftCamera.LastImageFileName;'
             success, response = self.sendCommand(command)
 
-            modelData['imagepath'] = response
+            modelData['ImagePath'] = response
 
             return success, response, modelData
         except Exception as e:

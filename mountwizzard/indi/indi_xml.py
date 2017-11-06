@@ -33,6 +33,13 @@ import logging
 from xml.etree import ElementTree
 
 
+class IndiXMLException:
+    logger = logging.getLogger(__name__)
+
+    def __init__(self, msg):
+        self.logger.error('IndiXMLException: {0}'.format(msg))
+
+
 class INDIBase(object):
     """
     INDI command base classes.

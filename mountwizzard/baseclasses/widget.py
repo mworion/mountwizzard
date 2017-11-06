@@ -13,6 +13,8 @@
 ############################################################
 import platform
 import logging
+import os
+import sys
 
 # import for the PyQt5 Framework
 from PyQt5.QtGui import *
@@ -55,33 +57,8 @@ class MwWidget(QWidget):
         self.showStatus = False
         self.initUI()                                                                                                       # adapt the window to our purpose
 
-    def mousePressEvent(self, mouseEvent):                                                                                  # overloading the mouse events for handling customized windows
-        self.modifiers = mouseEvent.modifiers()
-        if mouseEvent.button() == Qt.LeftButton:
-            self.moving = True
-            self.offset = mouseEvent.pos()
-        if mouseEvent.button() == Qt.RightButton:
-            self.moving = False
-
-    def mouseMoveEvent(self, mouseEvent):
-        if self.moving:
-            cursor = QCursor()
-            self.move(cursor.pos() - self.offset)
-
-    def mouseReleaseEvent(self, mouseEvent):
-        if self.moving:
-            cursor = QCursor()
-            self.move(cursor.pos() - self.offset)
-        self.moving = False
-
     def closeEvent(self, closeEvent):
-        if False:
-            super(MwWidget, self).closeEvent(closeEvent)
-        else:
-            closeEvent.ignore()
-            # self.setWindowState(Qt.WindowMinimized)
-            self.showStatus = False
-            self.setVisible(False)
+        self.showStatus = False
 
     def initUI(self):
         # self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
@@ -104,6 +81,13 @@ class MwWidget(QWidget):
             self.setPalette(darkPalette)
             self.palette.setColor(QPalette.Foreground, self.COLOR_ASTRO)
             self.palette.setColor(QPalette.Background, self.COLOR_BACKGROUND)
-
-        # sizing
+        # sizing in gui should be fixed, because I have a static layout
         self.setFixedSize(790, 640)
+        # set app icon
+        if getattr(sys, 'frozen', False):
+            # we are running in a bundle
+            bundle_dir = sys._MEIPASS
+        else:
+            # we are running in a normal Python environment
+            bundle_dir = os.path.dirname(sys.modules['__main__'].__file__)
+        self.setWindowIcon(QIcon(bundle_dir + '\\mw.ico'))

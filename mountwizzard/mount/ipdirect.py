@@ -19,7 +19,7 @@ import socket
 
 
 class MountIpDirect:
-    logger = logging.getLogger(__name__)                                                                                    # enable logging
+    logger = logging.getLogger(__name__)
     PORT = 3492
 
     def __init__(self, app):
@@ -43,19 +43,19 @@ class MountIpDirect:
         ip = '{0:d}.{1:d}.{2:d}.{3:d}'.format(v[0], v[1], v[2], v[3])
         return ip
 
-    def connect(self):                                                                                                      # runnable of the thread
+    def connect(self):
         try:
             if self.socket is None:
                 self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.socket.settimeout(60)
             self.socket.connect((self.mountIP(), self.PORT))
-            self.connected = True                                                                                           # setting connection status from driver
+            self.connected = True
             self.tryConnectionCounter = 0
         except ConnectionRefusedError:
-            pass                                                                                                            # mount probably booting
+            pass
         # except IOError:
         #     pass
-        except Exception as e:                                                                                              # error handling
+        except Exception as e:
             self.tryConnectionCounter += 1
             if self.tryConnectionCounter < 3:
                 self.logger.warning('Direct mount connection is broken')
@@ -64,8 +64,8 @@ class MountIpDirect:
             else:
                 pass
             self.socket = None
-            self.connected = False                                                                                          # connection broken
-        finally:                                                                                                            # we don't stop, but try it again
+            self.connected = False
+        finally:
             pass
 
     def disconnect(self):
@@ -76,13 +76,13 @@ class MountIpDirect:
                 self.socket.close()
                 self.socket = None
         except ConnectionRefusedError:
-            pass                                                                                                            # mount probably booting
+            pass
         # except IOError:
         #    pass
-        except Exception as e:                                                                                              # error handling
+        except Exception as e:
             self.logger.error('Socket disconnect error: {0}'.format(e))
-            self.connected = False                                                                                          # connection broken
-        finally:                                                                                                            # we don't stop, but try it again
+            self.connected = False
+        finally:
             pass
 
     def commandBlind(self, command):
@@ -94,10 +94,10 @@ class MountIpDirect:
                 if sent == 0:
                     raise RuntimeError("Socket connection broken")
                 totalSent = totalSent + sent
-        except Exception as e:                                                                                              # error handling
+        except Exception as e:
             self.logger.error('Socket send error: {0}'.format(e))
-            self.disconnect()                                                                                               # connection broken
-        finally:                                                                                                            # we don't stop, but try it again
+            self.disconnect()
+        finally:
             pass
 
     def commandString(self, command):
@@ -110,38 +110,40 @@ class MountIpDirect:
                     raise RuntimeError('Socket connection broken')
                 chunk = chunk.decode()
                 chunks.append(chunk)
-                if chunk[len(chunk)-1] == '#' or len(chunk) == 1:                                                           # for some reasons there are existing command return values not ended with '#'
+                # for some reasons there are existing command return values not ended with '#'
+                if chunk[len(chunk)-1] == '#' or len(chunk) == 1:
                     break
         except RuntimeError as e:
             self.logger.error('Socket connection broken')
             self.disconnect()
-        except Exception as e:                                                                                              # error handling
+        except Exception as e:
             self.logger.error('Socket receive error: {0}'.format(e))
-        finally:                                                                                                            # we don't stop, but try it again
+        finally:
             # noinspection PyUnboundLocalVariable
             value = ''.join(chunks)
             return value
 
-    def sendCommand(self, command):                                                                                         # core routine for sending commands to mount
-        reply = ''                                                                                                          # reply is empty
+    def sendCommand(self, command):
+        reply = ''
         self.sendCommandLock.acquire()
         if self.connected:
-            try:                                                                                                            # all with error handling
-                if command in self.app.mount.BLIND_COMMANDS:                                                                # these are the commands, which do not expect a return value
-                    self.commandBlind(command)                                                                              # than do blind command
-                else:                                                                                                       #
-                    reply = self.commandString(command)                                                                     # with return value do regular command
-            except Exception as e:                                                                                          # error handling
-                self.app.messageQueue.put('TCP error in sendCommand')                                                       # gui
+            try:
+                # these are the commands, which do not expect a return value
+                if command in self.app.mount.BLIND_COMMANDS:
+                    self.commandBlind(command)
+                else:
+                    reply = self.commandString(command)
+            except Exception as e:
+                self.app.messageQueue.put('TCP error in sendCommand')
                 self.logger.error('error: {0} command:{1}  reply:{2} '.format(e, command, reply))
-            finally:                                                                                                        # we don't stop
-                if len(reply) > 0:                                                                                          # if there is a reply
-                    value = reply.rstrip('#').strip()                                                                       # return the value
+            finally:
+                if len(reply) > 0:
+                    value = reply.rstrip('#').strip()
                     if command == 'CMS':
                         self.logger.info('Return Value Add Model Point: {0}'.format(reply))
-                else:                                                                                                       #
-                    if command in self.app.mount.BLIND_COMMANDS:                                                            # these are the commands, which do not expect a return value
-                        value = ''                                                                                          # nothing
+                else:
+                    if command in self.app.mount.BLIND_COMMANDS:
+                        value = ''
                     else:
                         value = '0'
         else:

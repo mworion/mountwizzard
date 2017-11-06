@@ -23,6 +23,7 @@ class NoneCamera(MWCamera):
 
     def __init__(self, app):
         super(NoneCamera, self).__init__(app)
+        self.checkAppInstall()
 
     def checkAppInstall(self):
         self.appAvailable = True

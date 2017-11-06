@@ -30,7 +30,6 @@ class MWCamera:
         self.appName = ''
         self.appExe = ''
         self.tryConnectionCounter = 0
-        self.checkAppInstall()
         self.host = ''
         self.port = 0
 

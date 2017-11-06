@@ -43,7 +43,7 @@ class DataUploadToMount(PyQt5.QtCore.QThread):
     ASTEROIDS_UNUSAL = 'http://www.minorplanetcenter.net/iau/MPCORB/Unusual.txt'
     SPACESTATIONS = 'http://www.celestrak.com/NORAD/elements/stations.txt'
     SATBRIGHTEST = 'http://www.celestrak.com/NORAD/elements/visual.txt'
-    TARGET_DIR = os.getcwd() + '\\config\\'
+    TARGET_DIR = os.getcwd() + '\\'
     COMETS_FILE = 'comets.mpc'
     ASTEROIDS_FILE = 'asteroids.mpc'
     SPACESTATIONS_FILE = 'spacestations.tle'
@@ -73,6 +73,7 @@ class DataUploadToMount(PyQt5.QtCore.QThread):
         self.app.ui.btn_downloadAll.clicked.connect(lambda: self.app.commandDataQueue.put('ALL'))
         self.app.ui.btn_uploadMount.clicked.connect(lambda: self.app.commandDataQueue.put('UPLOADMOUNT'))
         self.checkApplication()
+        self.TARGET_DIR = self.appInstallPath
         self.initConfig()
 
     def initConfig(self):
@@ -230,20 +231,20 @@ class DataUploadToMount(PyQt5.QtCore.QThread):
         try:
             actual_work_dir = os.getcwd()
             os.chdir(os.path.dirname(self.appInstallPath))
-            app = Application(backend='win32')                                                                              # backend win32 ist faster than uai
-            app.start(self.appInstallPath + '\\' + self.appExe)                                                             # start 10 micro updater
+            app = Application(backend='win32')
+            app.start(self.appInstallPath + self.appExe)
             # timings.Timings.Slow()
         except application.AppStartError:
-            self.logger.error('error starting application')
+            self.logger.error('Failed to start updater, please check!')
             self.app.messageQueue.put('Failed to start updater, please check!')
             os.chdir(actual_work_dir)
             return
         try:
-            dialog = timings.WaitUntilPasses(2, 0.5, lambda: findwindows.find_windows(title='GmQCIv2', class_name='#32770')[0])
+            dialog = timings.WaitUntilPasses(2, 0.2, lambda: findwindows.find_windows(title='GmQCIv2', class_name='#32770')[0])
             winOK = app.window_(handle=dialog)
             winOK['OK'].click()
-        except TimeoutError as e:
-            self.logger.warning('timeout error{0}'.format(e))
+        except timings.TimeoutError as e:
+            self.logger.warning('No invalid floating point windows occurred - moving forward')
         except Exception as e:
             self.logger.error('error{0}'.format(e))
         finally:
@@ -252,20 +253,20 @@ class DataUploadToMount(PyQt5.QtCore.QThread):
             win = app['10 micron control box update']                                                                       # link handle
             win['next'].click()                                                                                             # accept next
             win['next'].click()                                                                                             # go upload select page
-            ButtonWrapper(win['Control box firmware']).uncheck()                                                            # no firmware updates
+            ButtonWrapper(win['Control box firmware']).UncheckByClick()                                                       # no firmware updates
         except Exception as e:
             self.logger.error('error{0}'.format(e))
             self.app.messageQueue.put('Error in starting 10micron updater, please check!')
             os.chdir(actual_work_dir)
             return
-        ButtonWrapper(win['Orbital parameters of comets']).uncheck()
-        ButtonWrapper(win['Orbital parameters of asteroids']).uncheck()
-        ButtonWrapper(win['Orbital parameters of satellites']).uncheck()
-        ButtonWrapper(win['UTC / Earth rotation data']).uncheck()
+        ButtonWrapper(win['Orbital parameters of comets']).UncheckByClick()
+        ButtonWrapper(win['Orbital parameters of asteroids']).UncheckByClick()
+        ButtonWrapper(win['Orbital parameters of satellites']).UncheckByClick()
+        ButtonWrapper(win['UTC / Earth rotation data']).UncheckByClick()
         try:
             uploadNecessary = False
             if self.app.ui.checkComets.isChecked():
-                ButtonWrapper(win['Orbital parameters of comets']).check()
+                ButtonWrapper(win['Orbital parameters of comets']).CheckByClick()
                 win['Edit...4'].click()
                 popup = app['Comet orbits']
                 popup['MPC file'].click()
@@ -280,9 +281,9 @@ class DataUploadToMount(PyQt5.QtCore.QThread):
                 filedialog['Button16'].click()                                                                              # accept filename selection and proceed
                 popup['Close'].click()
             else:
-                ButtonWrapper(win['Orbital parameters of comets']).uncheck()
+                ButtonWrapper(win['Orbital parameters of comets']).UncheckByClick()
             if self.app.ui.checkAsteroids.isChecked():
-                ButtonWrapper(win['Orbital parameters of asteroids']).check()
+                ButtonWrapper(win['Orbital parameters of asteroids']).CheckByClick()
                 win['Edit...3'].click()
                 popup = app['Asteroid orbits']
                 popup['MPC file'].click()
@@ -297,9 +298,9 @@ class DataUploadToMount(PyQt5.QtCore.QThread):
                 filedialog['Button16'].click()                                                                              # accept filename selection and proceed
                 popup['Close'].click()
             else:
-                ButtonWrapper(win['Orbital parameters of asteroids']).uncheck()
+                ButtonWrapper(win['Orbital parameters of asteroids']).UncheckByClick()
             if self.app.ui.checkTLE.isChecked():
-                ButtonWrapper(win['Orbital parameters of satellites']).check()
+                ButtonWrapper(win['Orbital parameters of satellites']).CheckByClick()
                 win['Edit...2'].click()
                 popup = app['Satellites orbits']
                 popup['Load from file'].click()
@@ -309,9 +310,9 @@ class DataUploadToMount(PyQt5.QtCore.QThread):
                 popup['Close'].click()
                 uploadNecessary = True
             else:
-                ButtonWrapper(win['Orbital parameters of satellites']).uncheck()
+                ButtonWrapper(win['Orbital parameters of satellites']).UncheckByClick()
             if self.app.ui.checkTLE.isChecked():
-                ButtonWrapper(win['Orbital parameters of satellites']).check()
+                ButtonWrapper(win['Orbital parameters of satellites']).CheckByClick()
                 win['Edit...2'].click()
                 popup = app['Satellites orbits']
                 popup['Load from file'].click()
@@ -321,9 +322,9 @@ class DataUploadToMount(PyQt5.QtCore.QThread):
                 popup['Close'].click()
                 uploadNecessary = True
             else:
-                ButtonWrapper(win['Orbital parameters of satellites']).uncheck()
+                ButtonWrapper(win['Orbital parameters of satellites']).UncheckByClick()
             if self.app.ui.checkEarthrotation.isChecked():
-                ButtonWrapper(win['UTC / Earth rotation data']).check()
+                ButtonWrapper(win['UTC / Earth rotation data']).CheckByClick()
                 win['Edit...1'].click()
                 popup = app['UTC / Earth rotation data']
                 popup['Import files...'].click()
@@ -337,7 +338,7 @@ class DataUploadToMount(PyQt5.QtCore.QThread):
                 fileOK['OK'].click()
                 uploadNecessary = True
             else:
-                ButtonWrapper(win['UTC / Earth rotation data']).uncheck()
+                ButtonWrapper(win['UTC / Earth rotation data']).UncheckByClick()
         except Exception as e:
             self.logger.error('error{0}'.format(e))
             self.app.messageQueue.put('Error in choosing upload files, please check 10micron updater!')

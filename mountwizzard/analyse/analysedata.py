@@ -56,82 +56,82 @@ class Analyse:
             # site_latitude = self.app.mount.degStringToDecimal(lines[4][0:9], ' ')
             for i in range(5, len(lines)):
                 ra, dec, ra_sol, dec_sol, lst = self.processTheSkyXLine(lines[i])
-                if 'ra_J2000' in resultData:
-                    resultData['ra_J2000'].append(ra)
+                if 'RaJ2000' in resultData:
+                    resultData['RaJ2000'].append(ra)
                 else:
-                    resultData['ra_J2000'] = [ra]
-                if 'dec_J2000' in resultData:
-                    resultData['dec_J2000'].append(dec)
+                    resultData['RaJ2000'] = [ra]
+                if 'DecJ2000' in resultData:
+                    resultData['DecJ2000'].append(dec)
                 else:
-                    resultData['dec_J2000'] = [dec]
+                    resultData['DecJ2000'] = [dec]
                 ra_Jnow, dec_Jnow = self.app.mount.transformERFA(ra, dec, 3)
-                if 'ra_Jnow' in resultData:
-                    resultData['ra_Jnow'].append(ra_Jnow)
+                if 'RaJNow' in resultData:
+                    resultData['RaJNow'].append(ra_Jnow)
                 else:
-                    resultData['ra_Jnow'] = [ra_Jnow]
-                if 'dec_Jnow' in resultData:
-                    resultData['dec_Jnow'].append(dec_Jnow)
+                    resultData['RaJNow'] = [ra_Jnow]
+                if 'DecJNow' in resultData:
+                    resultData['decJNow'].append(dec_Jnow)
                 else:
-                    resultData['dec_Jnow'] = [dec_Jnow]
-                if 'sidereal_time_float' in resultData:
-                    resultData['sidereal_time_float'].append(lst)
+                    resultData['DecJNow'] = [dec_Jnow]
+                if 'LocalSiderealTimeFloat' in resultData:
+                    resultData['LocalSiderealTimeFloat'].append(lst)
                 else:
-                    resultData['sidereal_time_float'] = [lst]
-                if 'sidereal_time' in resultData:
-                    resultData['sidereal_time'].append(self.app.mount.decimalToDegree(lst, False, True))
+                    resultData['LocalSiderealTimeFloat'] = [lst]
+                if 'LocalSiderealTime' in resultData:
+                    resultData['LocalSiderealTime'].append(self.app.mount.decimalToDegree(lst, False, True))
                 else:
-                    resultData['sidereal_time'] = [self.app.mount.decimalToDegree(lst, False, True)]
-                if 'ra_sol' in resultData:
-                    resultData['ra_sol'].append(ra_sol)
+                    resultData['LocalSiderealTime'] = [self.app.mount.decimalToDegree(lst, False, True)]
+                if 'RaJ2000Solved' in resultData:
+                    resultData['RaJ2000Solved'].append(ra_sol)
                 else:
-                    resultData['ra_sol'] = [ra_sol]
-                if 'dec_sol' in resultData:
-                    resultData['dec_sol'].append(dec_sol)
+                    resultData['RaJ2000Solved'] = [ra_sol]
+                if 'DecJ2000Solved' in resultData:
+                    resultData['DecJ2000Solved'].append(dec_sol)
                 else:
-                    resultData['dec_sol'] = [dec_sol]
+                    resultData['DecJ2000Solved'] = [dec_sol]
                 ra_sol_Jnow, dec_sol_Jnow = self.app.mount.transformERFA(ra_sol, dec_sol, 3)
-                if 'ra_sol_Jnow' in resultData:
-                    resultData['ra_sol_Jnow'].append(ra_sol_Jnow)
+                if 'RaJNowSolved' in resultData:
+                    resultData['RaJNowSolved'].append(ra_sol_Jnow)
                 else:
-                    resultData['ra_sol_Jnow'] = [ra_sol_Jnow]
-                if 'dec_sol_Jnow' in resultData:
-                    resultData['dec_sol_Jnow'].append(dec_sol_Jnow)
+                    resultData['RaJNowSolved'] = [ra_sol_Jnow]
+                if 'DecJNowSolved' in resultData:
+                    resultData['DecJNowSolved'].append(dec_sol_Jnow)
                 else:
-                    resultData['dec_sol_Jnow'] = [dec_sol_Jnow]
+                    resultData['DecJNowSolved'] = [dec_sol_Jnow]
                 ha = ra - lst
                 az, alt = self.app.mount.transformERFA(ha, dec, 3)
-                if 'azimuth' in resultData:
-                    resultData['azimuth'].append(az)
+                if 'Azimuth' in resultData:
+                    resultData['Azimuth'].append(az)
                 else:
-                    resultData['azimuth'] = [az]
-                if 'altitude' in resultData:
-                    resultData['altitude'].append(alt)
+                    resultData['Azimuth'] = [az]
+                if 'Altitude' in resultData:
+                    resultData['Altitude'].append(alt)
                 else:
-                    resultData['altitude'] = [alt]
+                    resultData['Altitude'] = [alt]
                 if az <= 180:
                     pierside = 'E'
                 else:
                     pierside = 'W'
-                if 'pierside' in resultData:
-                    resultData['pierside'].append(pierside)
+                if 'Pierside' in resultData:
+                    resultData['Pierside'].append(pierside)
                 else:
-                    resultData['pierside'] = [pierside]
-                if 'index' in resultData:
-                    resultData['index'].append(i - 5)
+                    resultData['Pierside'] = [pierside]
+                if 'Index' in resultData:
+                    resultData['Index'].append(i - 5)
                 else:
                     resultData['index'] = [i - 5]
-                if 'raError' in resultData:
-                    resultData['raError'].append((ra - ra_sol) * 3600)
+                if 'RaError' in resultData:
+                    resultData['RaError'].append((ra - ra_sol) * 3600)
                 else:
-                    resultData['raError'] = [(ra - ra_sol) * 3600]
-                if 'decError' in resultData:
-                    resultData['decError'].append((dec - dec_sol) * 3600)
+                    resultData['RaError'] = [(ra - ra_sol) * 3600]
+                if 'DecError' in resultData:
+                    resultData['DecError'].append((dec - dec_sol) * 3600)
                 else:
-                    resultData['decError'] = [(dec - dec_sol) * 3600]
-                if 'modelError' in resultData:
-                    resultData['modelError'].append(math.sqrt((ra - ra_sol) * 3600 * (ra - ra_sol) * 3600 + (dec - dec_sol) * 3600 * (dec - dec_sol) * 3600))
+                    resultData['DecError'] = [(dec - dec_sol) * 3600]
+                if 'ModelError' in resultData:
+                    resultData['ModelError'].append(math.sqrt((ra - ra_sol) * 3600 * (ra - ra_sol) * 3600 + (dec - dec_sol) * 3600 * (dec - dec_sol) * 3600))
                 else:
-                    resultData['modelError'] = [math.sqrt((ra - ra_sol) * 3600 * (ra - ra_sol) * 3600 + (dec - dec_sol) * 3600 * (dec - dec_sol) * 3600)]
+                    resultData['ModelError'] = [math.sqrt((ra - ra_sol) * 3600 * (ra - ra_sol) * 3600 + (dec - dec_sol) * 3600 * (dec - dec_sol) * 3600)]
         except Exception as e:
             self.logger.error('error processing file {0}, Error : {1}'.format(filename, e))
             return {}
@@ -148,6 +148,8 @@ class Analyse:
         resultData = dict()
         for timestepdict in dataJson:
             for (keyData, valueData) in timestepdict.items():
+                if keyData == 'azimuth':
+                    return {}
                 if keyData in resultData:
                     resultData[keyData].append(valueData)
                 else:
@@ -182,16 +184,16 @@ class Analyse:
     def prepareData(dataProcess, scaleRA, scaleDEC):
         if len(dataProcess) == 0:                                                                                           # in case no data loaded ->
             return dataProcess                                                                                              # quit
-        dataProcess['raError'] = [scaleRA if x > scaleRA else x for x in dataProcess['raError']]
-        dataProcess['raError'] = [-scaleRA if x < -scaleRA else x for x in dataProcess['raError']]
-        dataProcess['decError'] = [scaleDEC if x > scaleDEC else x for x in dataProcess['decError']]
-        dataProcess['decError'] = [-scaleDEC if x < -scaleDEC else x for x in dataProcess['decError']]
+        dataProcess['RaError'] = [scaleRA if x > scaleRA else x for x in dataProcess['RaError']]
+        dataProcess['RaError'] = [-scaleRA if x < -scaleRA else x for x in dataProcess['RaError']]
+        dataProcess['DecError'] = [scaleDEC if x > scaleDEC else x for x in dataProcess['DecError']]
+        dataProcess['DecError'] = [-scaleDEC if x < -scaleDEC else x for x in dataProcess['DecError']]
         return dataProcess
 
 
 if __name__ == "__main__":
     logger = getLogger(__name__)
-    from mount.mount_thread import Mount
+    from mount.mountThread import Mount
     filename = '10micron_model.dat'
     m = Mount
     a = Analyse(m)

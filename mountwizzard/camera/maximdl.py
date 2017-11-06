@@ -32,6 +32,7 @@ class MaximDLCamera(MWCamera):
         self.maximDocument = None                                                                                           # placeholder for ascom driver object
         self.cameraStatus = ''
         self.appExe = 'MaxIm_DL.exe'
+        self.checkAppInstall()
 
     def checkAppInstall(self):
         self.appAvailable, self.appName, self.appInstallPath = self.app.checkRegistrationKeys('MaxIm DL')
@@ -86,23 +87,23 @@ class MaximDLCamera(MWCamera):
         mes = ''
         if self.maximCamera:
             try:
-                self.maximCamera.BinX = int(modelData['binning'])
-                self.maximCamera.BinY = int(modelData['binning'])
-                self.maximCamera.NumX = int(modelData['sizeX'])
-                self.maximCamera.NumY = int(modelData['sizeY'])
-                self.maximCamera.StartX = int(modelData['offX'])
-                self.maximCamera.StartY = int(modelData['offY'])
-                if modelData['speed'] == 'HiSpeed':
+                self.maximCamera.BinX = int(modelData['Binning'])
+                self.maximCamera.BinY = int(modelData['Binning'])
+                self.maximCamera.NumX = int(modelData['SizeX'])
+                self.maximCamera.NumY = int(modelData['SizeY'])
+                self.maximCamera.StartX = int(modelData['OffX'])
+                self.maximCamera.StartY = int(modelData['OffY'])
+                if modelData['Speed'] == 'HiSpeed':
                     self.maximCamera.FastReadout = True
                 else:
                     self.maximCamera.FastReadout = False
-                suc = self.maximCamera.Expose(modelData['exposure'], 1)
+                suc = self.maximCamera.Expose(modelData['Exposure'], 1)
                 if not suc:
                     self.logger.error('could not start exposure')
                 while not self.maximCamera.ImageReady:
                     time.sleep(0.5)
-                modelData['imagepath'] = modelData['base_dir_images'] + '/' + modelData['file']
-                self.maximCamera.SaveImage(modelData['imagepath'])
+                modelData['ImagePath'] = modelData['BaseDirImages'] + '/' + modelData['File']
+                self.maximCamera.SaveImage(modelData['ImagePath'])
                 suc = True
                 mes = 'Image integrated'
             except Exception as e:
@@ -162,7 +163,7 @@ class MaximDLCamera(MWCamera):
     def solveImage(self, modelData):
         startTime = time.time()                                                                                             # start timer for plate solve
         mes = ''
-        self.maximDocument.OpenFile(modelData['imagepath'].replace('/', '\\'))                                              # open the fits file
+        self.maximDocument.OpenFile(modelData['ImagePath'].replace('/', '\\'))                                              # open the fits file
         ra = self.app.mount.transform.degStringToDecimal(self.maximDocument.GetFITSKey('OBJCTRA'), ' ')                     # get ra
         dec = self.app.mount.transform.degStringToDecimal(self.maximDocument.GetFITSKey('OBJCTDEC'), ' ')                   # get dec
         hint = self.maximDocument.GetFITSKey('CDELT1')
@@ -193,7 +194,7 @@ class MaximDLCamera(MWCamera):
             self.logger.info('no start {0}'.format(status))
             suc = self.maximDocument.Close
             if not suc:
-                self.logger.error('document {0} could not be closed'.format(modelData['imagepath']))
+                self.logger.error('document {0} could not be closed'.format(modelData['ImagePath']))
                 return False, 'Problem closing document in MaximDL', modelData
             else:
                 return False, mes, modelData
@@ -201,11 +202,11 @@ class MaximDLCamera(MWCamera):
         stopTime = time.time()
         timeTS = (stopTime - startTime) / 1000
         if status == 2:
-            modelData['dec_sol'] = self.maximDocument.CenterDec
-            modelData['ra_sol'] = self.maximDocument.CenterRA
-            modelData['scale'] = self.maximDocument.ImageScale
-            modelData['angle'] = self.maximDocument.PositionAngle
-            modelData['timeTS'] = timeTS
+            modelData['RaJ2000Solved'] = self.maximDocument.CenterRA
+            modelData['DecJ2000Solved'] = self.maximDocument.CenterDec
+            modelData['Scale'] = self.maximDocument.ImageScale
+            modelData['Angle'] = self.maximDocument.PositionAngle
+            modelData['TimeTS'] = timeTS
             self.logger.info('modelData {0}'.format(modelData))
             return True, 'Solved', modelData
 
@@ -216,11 +217,11 @@ if __name__ == "__main__":
     cam.appRunning = True
     cam.connectApplication()
     print(cam.getCameraProps())
-    value = {'binning': 1, 'exposure': 1, 'iso': 100,
-             'gainValue': 'Not Set', 'speed': 'HiSpeed',
-             'file': 'test.fit', 'base_dir_images': 'c:/temp',
-             'canSubframe': True, 'offX': 0, 'offY': 0,
-             'sizeX': 3388, 'sizeY': 2712}
+    value = {'Binning': 1, 'Exposure': 1, 'Iso': 100,
+             'GainValue': 'Not Set', 'Speed': 'HiSpeed',
+             'File': 'test.fit', 'BaseDirImages': 'c:/temp',
+             'CanSubframe': True, 'OffX': 0, 'OffY': 0,
+             'SizeX': 3388, 'SizeY': 2712}
     t_start = time.time()
     for i in range(0, max):
         print(i)

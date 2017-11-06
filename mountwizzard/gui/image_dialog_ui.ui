@@ -35,7 +35,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>15</y>
+     <y>10</y>
      <width>81</width>
      <height>81</height>
     </rect>
@@ -52,7 +52,7 @@ Shot</string>
   <widget class="QPushButton" name="btn_crosshair">
    <property name="geometry">
     <rect>
-     <x>340</x>
+     <x>290</x>
      <y>25</y>
      <width>81</width>
      <height>31</height>
@@ -174,8 +174,8 @@ Shot</string>
   <widget class="QPushButton" name="btn_solve">
    <property name="geometry">
     <rect>
-     <x>340</x>
-     <y>65</y>
+     <x>290</x>
+     <y>60</y>
      <width>81</width>
      <height>31</height>
     </rect>
@@ -254,7 +254,7 @@ Shot</string>
    <property name="geometry">
     <rect>
      <x>100</x>
-     <y>15</y>
+     <y>10</y>
      <width>81</width>
      <height>81</height>
     </rect>
@@ -272,7 +272,7 @@ Exposures</string>
    <property name="geometry">
     <rect>
      <x>190</x>
-     <y>15</y>
+     <y>10</y>
      <width>81</width>
      <height>81</height>
     </rect>
@@ -289,7 +289,7 @@ Exposures</string>
   <widget class="QLabel" name="label_82">
    <property name="geometry">
     <rect>
-     <x>340</x>
+     <x>290</x>
      <y>5</y>
      <width>51</width>
      <height>21</height>
@@ -307,7 +307,7 @@ Exposures</string>
   <widget class="Line" name="line_14">
    <property name="geometry">
     <rect>
-     <x>390</x>
+     <x>340</x>
      <y>5</y>
      <width>31</width>
      <height>21</height>
@@ -392,6 +392,48 @@ Exposures</string>
    </property>
    <property name="orientation">
     <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="le_INDICameraStatus">
+   <property name="geometry">
+    <rect>
+     <x>390</x>
+     <y>60</y>
+     <width>121</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Courier</family>
+     <pointsize>10</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="mouseTracking">
+    <bool>false</bool>
+   </property>
+   <property name="acceptDrops">
+    <bool>false</bool>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;IP address of relay switch&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="layoutDirection">
+    <enum>Qt::RightToLeft</enum>
+   </property>
+   <property name="text">
+    <string>---</string>
+   </property>
+   <property name="maxLength">
+    <number>15</number>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+   </property>
+   <property name="readOnly">
+    <bool>false</bool>
    </property>
   </widget>
  </widget>

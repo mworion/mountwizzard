@@ -11,19 +11,16 @@
 # Licence APL2.0
 #
 ############################################################
-import datetime
-import json
-# import basic stuff
+import platform
+import os
+import sys
 import logging
 import logging.handlers
-import math
-import os
-import platform
-import sys
-
+import datetime
+import json
 # numerics
+import math
 import numpy
-
 if platform.system() == 'Windows':
     # application handling
     from winreg import *
@@ -42,18 +39,19 @@ from matplotlib import figure as figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 # import the UI part, which is done via QT Designer and exported
 from baseclasses import widget
-from widgets import modelplotwindow
-from widgets import imagewindow
-from widgets import analysewindow
+from widgets import modelplotWindow
+from widgets import imageWindow
+from widgets import analyseWindow
 from gui import wizzard_main_ui
-from environment import environ_thread
+from environment import environThread
 # modeling
-from modeling import modeling_thread
+from modeling import modelThread
 # import mount functions classes
-from mount import mount_thread
+from mount import mountThread
 from relays import relays
-from remote import remote_thread
-from dome import dome_thread
+from remote import remoteThread
+from dome import domeThread
+from indi import indi_client
 
 if platform.system() == 'Windows':
     from automation import upload_thread
@@ -73,59 +71,72 @@ class MountWizzardApp(widget.MwWidget):
     logger = logging.getLogger(__name__)
 
     def __init__(self):
-        super(MountWizzardApp, self).__init__()                                                                             # Initialize Class for UI
-        self.mountCommandQueue = Queue()                                                                                    # queue for sending command to mount
-        self.mountDataQueue = Queue()                                                                                       # queue for sending data back to gui
-        self.modelLogQueue = Queue()                                                                                        # queue for showing the modeling progress
+        super(MountWizzardApp, self).__init__()
+        # setting up communication queues for inter thread communication
+        self.mountCommandQueue = Queue()
+        self.modelLogQueue = Queue()
         self.modelCommandQueue = Queue()
-        self.messageQueue = Queue()                                                                                         # queue for showing messages in Gui from threads
+        self.messageQueue = Queue()
         self.imageQueue = Queue()
-        self.environmentQueue = Queue()
-        self.commandDataQueue = Queue()                                                                                     # queue for command to data thread for downloading data
-        self.config = self.loadConfig()                                                                                     # load configuration
-        self.ui = wizzard_main_ui.Ui_MainWindow()                                                                           # load the dialog from "DESIGNER"
-        self.ui.setupUi(self)                                                                                               # initialising the GUI
-        self.initUI()                                                                                                       # adapt the window to our purpose
+        self.commandDataQueue = Queue()
+        self.INDISendCommandQueue = Queue()
+        self.INDIDataQueue = Queue()
+        # loading config data
+        self.config = self.loadConfigData()
+        # initializing the gui
+        self.ui = wizzard_main_ui.Ui_MainWindow()
+        self.ui.setupUi(self)
+        # special setups for gui including box for matplotlib. margins to 0
+        self.initUI()
         self.setWindowTitle('MountWizzard ' + BUILD_NO)
-        self.relays = relays.Relays(self)                                                                                   # Web base relays box for Booting and CCD / Heater On / OFF
-        self.mount = mount_thread.Mount(self)                                                                               # Mount -> everything with mount and alignment
-        self.dome = dome_thread.Dome(self)                                                                                  # dome control
-        self.environment = environ_thread.Environment(self)
-        if platform.system() == 'Windows':
-            self.data = upload_thread.DataUploadToMount(self)                                                               # data thread for downloading topics
-        self.modeling = modeling_thread.Modeling(self)                                                                      # transferring ui and mount object as well
-        self.analyseWindow = analysewindow.AnalyseWindow(self)                                                              # windows for analyse data
-        self.modelWindow = modelplotwindow.ModelPlotWindow(self)                                                            # window for modeling points
-        self.imageWindow = imagewindow.ImagesWindow(self)                                                                   # window for imaging
-        self.initConfig()
-        helper = QVBoxLayout(self.ui.model)                                                                                 # adding box layout for matplotlib
-        helper.setContentsMargins(0, 0, 0, 0)                                                                               # set margins to 0 -> box in qt is frameless
-        self.modelWidget = ShowModel(self.ui.model)                                                                         # build the polar plot widget
+        self.ui.le_mwWorkingDir.setText(os.getcwd())
+        helper = QVBoxLayout(self.ui.model)
+        helper.setContentsMargins(0, 0, 0, 0)
+        self.modelWidget = ShowModel(self.ui.model)
         # noinspection PyArgumentList
-        helper.addWidget(self.modelWidget)                                                                                  # add widget to view
-        self.mount.signalMountConnected.connect(self.setMountStatus)                                                        # status from thread
-        self.mount.start()                                                                                                  # starting polling thread
+        helper.addWidget(self.modelWidget)
+        # instantiating all subclasses and connecting thread signals
+        self.relays = relays.Relays(self)
+        self.mount = mountThread.Mount(self)
+        self.mount.signalMountConnected.connect(self.setMountStatus)
+        self.dome = domeThread.Dome(self)
+        self.dome.signalDomeConnected.connect(self.setDomeStatus)
+        self.INDIworker = indi_client.INDIClient(self)
+        self.INDIthread = QThread()
+        self.INDIworker.moveToThread(self.INDIthread)
+        self.INDIthread.started.connect(self.INDIworker.run)
+        self.INDIworker.status.connect(self.setINDIStatus)
+        self.environment = environThread.Environment(self)
+        if platform.system() == 'Windows':
+            self.data = upload_thread.DataUploadToMount(self)
+        self.modeling = modelThread.Modeling(self)
+        self.analyseWindow = analyseWindow.AnalyseWindow(self)
+        self.modelWindow = modelplotWindow.ModelPlotWindow(self)
+        self.imageWindow = imageWindow.ImagesWindow(self)
+        # starting the threads
+        self.mount.start()
         if platform.system() == 'Windows':
             self.checkASCOM()
-            self.dome.signalDomeConnected.connect(self.setDomeStatus)                                                       # status from thread
-            self.dome.start()                                                                                               # starting polling thread
-            self.data.start()                                                                                               # starting data thread
-        self.environment.signalEnvironmentConnected.connect(self.setEnvironmentStatus)                                      # status from thread
-        self.environment.start()                                                                                            # starting polling thread
-        self.modeling.signalModelConnected.connect(self.setCameraPlateStatus)                                               # status from thread
-        self.modeling.start()                                                                                               # starting polling thread
-        self.mappingFunctions()                                                                                             # mapping the functions to ui
-        self.mainLoop()                                                                                                     # starting loop for cyclic data to gui from threads
-        self.ui.le_mwWorkingDir.setText(os.getcwd())                                                                        # put working directory into gui
-        self.remote = remote_thread.Remote(self)
+            self.dome.start()
+            self.data.start()
+        self.environment.signalEnvironmentConnected.connect(self.setEnvironmentStatus)
+        self.environment.start()
+        self.modeling.signalModelConnected.connect(self.setCameraPlateStatus)
+        self.modeling.start()
+        self.remote = remoteThread.Remote(self)
         self.remote.signalRemoteShutdown.connect(self.saveConfigQuit)
-        self.selectRemoteAccess()
-        self.checkAvailableMenus()
+        self.enableDisableRemoteAccess()
+        self.enableDisableINDI()
+        self.initConfig()
+        self.mappingFunctions()
+        self.checkPlatformDependableMenus()
+        # starting loop for cyclic data to gui from threads
+        self.mainLoop()
 
     # noinspection PyArgumentList
     def mappingFunctions(self):
         self.ui.btn_mountQuit.clicked.connect(self.saveConfigQuit)
-        self.ui.btn_mountSave.clicked.connect(self.saveConfigCont)
+        self.ui.btn_mountSave.clicked.connect(self.saveConfig)
         self.ui.btn_mountBoot.clicked.connect(self.mountBoot)
         self.ui.btn_mountShutdown.clicked.connect(self.mountShutdown)
         self.ui.btn_mountPark.clicked.connect(lambda: self.mountCommandQueue.put('hP'))
@@ -159,8 +170,10 @@ class MountWizzardApp(widget.MwWidget):
             self.ui.btn_setupAscomEnvironmentDriver.clicked.connect(lambda: self.environment.setupDriver())
         self.ui.btn_setRefractionParameters.clicked.connect(lambda: self.mountCommandQueue.put('SetRefractionParameter'))
         self.ui.btn_runBaseModel.clicked.connect(lambda: self.modelCommandQueue.put('RunBaseModel'))
-        self.ui.btn_cancelModel.clicked.connect(lambda: self.modelCommandQueue.put('CancelModel'))
+        self.ui.btn_cancelModel.clicked.connect(self.modeling.cancelModeling)
+        self.ui.btn_cancelAnalyseModel.clicked.connect(self.modeling.cancelAnalyseModeling)
         self.ui.btn_runRefinementModel.clicked.connect(lambda: self.modelCommandQueue.put('RunRefinementModel'))
+        # self.ui.btn_runBoostModel.clicked.connect(lambda: self.modelCommandQueue.put('RunBoostModel'))
         self.ui.btn_runBatchModel.clicked.connect(lambda: self.modelCommandQueue.put('RunBatchModel'))
         self.ui.btn_clearAlignmentModel.clicked.connect(lambda: self.modelCommandQueue.put('ClearAlignmentModel'))
         self.ui.btn_selectHorizonPointsFileName.clicked.connect(self.modelWindow.selectHorizonPointsFileName)
@@ -206,19 +219,32 @@ class MountWizzardApp(widget.MwWidget):
         self.ui.btn_runCheckModel.clicked.connect(lambda: self.modelCommandQueue.put('RunCheckModel'))
         self.ui.btn_runAllModel.clicked.connect(lambda: self.modelCommandQueue.put('RunAllModel'))
         self.ui.btn_runTimeChangeModel.clicked.connect(lambda: self.modelCommandQueue.put('RunTimeChangeModel'))
-        self.ui.btn_cancelAnalyseModel.clicked.connect(lambda: self.modelCommandQueue.put('CancelAnalyseModel'))
         self.ui.btn_runHystereseModel.clicked.connect(lambda: self.modelCommandQueue.put('RunHystereseModel'))
         self.ui.btn_openAnalyseWindow.clicked.connect(self.analyseWindow.showAnalyseWindow)
         self.ui.btn_openModelingPlotWindow.clicked.connect(self.modelWindow.showModelingPlotWindow)
         self.ui.btn_openImageWindow.clicked.connect(self.imageWindow.showImageWindow)
         self.ui.btn_runCheckModel.clicked.connect(lambda: self.modelCommandQueue.put('RunCheckModel'))
-        self.ui.checkRemoteAccess.stateChanged.connect(self.selectRemoteAccess)
+        self.ui.checkRemoteAccess.stateChanged.connect(self.enableDisableRemoteAccess)
+        self.ui.checkEnableINDI.stateChanged.connect(self.enableDisableINDI)
 
-    def selectRemoteAccess(self):
+    def enableDisableRemoteAccess(self):
         if self.ui.checkRemoteAccess.isChecked():
             self.remote.start()
         else:
             self.remote.terminate()
+
+    def enableDisableINDI(self):
+        # todo: enable INDI Subsystem as soon as INDI is tested
+        # switch on and off INDI subsystem by setting INDICamera available to True (than it will occur in Imaging as well
+        if not self.modeling.INDICamera.appAvailable:
+            self.ui.checkEnableINDI.setChecked(False)
+            self.ui.settingsTabWidget.removeTab(3)
+        if self.ui.checkEnableINDI.isChecked():
+            self.INDIthread.start()
+        else:
+            self.INDIworker.stop()
+            self.INDIthread.quit()
+            self.INDIthread.wait()
 
     def mountBoot(self):
         wol.send_magic_packet(self.ui.le_mountMAC.text().strip())
@@ -234,6 +260,8 @@ class MountWizzardApp(widget.MwWidget):
         data = dict()
         for i in range(0, len(self.modeling.modelData)):
             for (keyData, valueData) in self.modeling.modelData[i].items():
+                if keyData == 'azimuth':
+                    return
                 if keyData in data:
                     data[keyData].append(valueData)
                 else:
@@ -250,14 +278,14 @@ class MountWizzardApp(widget.MwWidget):
         self.modelWidget.axes.set_yticks(range(0, 90, 10))
         yLabel = ['', '80', '', '60', '', '40', '', '20', '', '0']
         self.modelWidget.axes.set_yticklabels(yLabel, color='white')
-        azimuth = numpy.asarray(data['azimuth'])
-        altitude = numpy.asarray(data['altitude'])
+        azimuth = numpy.asarray(data['Azimuth'])
+        altitude = numpy.asarray(data['Altitude'])
         # self.modelWidget.axes.plot(azimuth / 180.0 * math.pi, 90 - altitude, color='black')
         cm = plt.cm.get_cmap('RdYlGn_r')
-        colors = numpy.asarray(data['modelError'])
+        colors = numpy.asarray(data['ModelError'])
         # noinspection PyTypeChecker
         scaleError = int(max(colors) / 4 + 1) * 4
-        area = [125 if x >= max(colors) else 50 for x in data['modelError']]
+        area = [125 if x >= max(colors) else 50 for x in data['ModelError']]
         theta = azimuth / 180.0 * math.pi
         r = 90 - altitude
         scatter = self.modelWidget.axes.scatter(theta, r, c=colors, vmin=0, vmax=scaleError, s=area, cmap=cm)
@@ -311,7 +339,7 @@ class MountWizzardApp(widget.MwWidget):
         finally:
             return appInstalled, appName, appInstallPath
 
-    def checkAvailableMenus(self):
+    def checkPlatformDependableMenus(self):
         if platform.system() != 'Windows':
             self.ui.settingsTabWidget.removeTab(5)
             self.ui.settingsTabWidget.removeTab(2)
@@ -440,7 +468,6 @@ class MountWizzardApp(widget.MwWidget):
                 self.ui.checkRemoteAccess.setChecked(self.config['CheckRemoteAccess'])
         except Exception as e:
             self.logger.error('Item in config.cfg not be initialize, error:{0}'.format(e))
-            print(e)
         finally:
             pass
 
@@ -504,7 +531,7 @@ class MountWizzardApp(widget.MwWidget):
         self.config['CheckKeepRefinement'] = self.ui.checkKeepRefinement.isChecked()
         self.config['CheckRemoteAccess'] = self.ui.checkRemoteAccess.isChecked()
 
-    def loadConfig(self):
+    def loadConfigData(self):
         try:
             with open('config/config.cfg', 'r') as data_file:
                 return json.load(data_file)
@@ -513,7 +540,7 @@ class MountWizzardApp(widget.MwWidget):
             self.logger.error('Item in config.cfg not loaded error:{0}'.format(e))
             return {}
 
-    def saveConfig(self):
+    def saveConfigData(self):
         self.storeConfig()
         self.mount.storeConfig()
         self.modeling.storeConfig()
@@ -525,6 +552,7 @@ class MountWizzardApp(widget.MwWidget):
         self.imageWindow.storeConfig()
         self.analyseWindow.storeConfig()
         self.relays.storeConfig()
+        self.INDIworker.storeConfig()
         try:
             if not os.path.isdir(os.getcwd() + '/config'):                                                                  # if config dir doesn't exist, make it
                 os.makedirs(os.getcwd() + '/config')                                                                        # if path doesn't exist, generate is
@@ -538,12 +566,12 @@ class MountWizzardApp(widget.MwWidget):
         self.mount.saveActualModel()                                                                                        # save current loaded modeling from mount
 
     def saveConfigQuit(self):
-        self.saveConfig()
+        self.saveConfigData()
         # noinspection PyArgumentList
         QCoreApplication.instance().quit()
 
-    def saveConfigCont(self):
-        self.saveConfig()
+    def saveConfig(self):
+        self.saveConfigData()
         self.messageQueue.put('Configuration saved.')
 
     def selectModelPointsFileName(self):
@@ -659,9 +687,38 @@ class MountWizzardApp(widget.MwWidget):
         self.mountCommandQueue.put('Sz{0:03d}*00'.format(int(self.ui.le_azParkPos6.text())))                                     # set az
         self.mountCommandQueue.put('Sa+{0:02d}*00'.format(int(self.ui.le_altParkPos6.text())))                                   # set alt
         self.mountCommandQueue.put('MA')                                                                                         # start Slewing
-    #
-    # mount handling
-    #
+
+    @QtCore.Slot(int)
+    def setINDIStatus(self, status):
+        if status == 0:
+            self.ui.le_INDIStatus.setText('UnconnectedState')
+        elif status == 1:
+            self.ui.le_INDIStatus.setText('HostLookupState')
+        elif status == 2:
+            self.ui.le_INDIStatus.setText('ConnectingState')
+        elif status == 3:
+            self.ui.le_INDIStatus.setText('ConnectedState')
+        elif status == 6:
+            self.ui.le_INDIStatus.setText('ClosingState')
+        else:
+            self.ui.le_INDIStatus.setText('Error')
+
+    @QtCore.Slot(dict)
+    def fillINDIData(self, data):
+        if data['Name'] == 'Telescope':
+            self.ui.le_INDITelescope.setText(data['value'])
+        elif data['Name'] == 'CCD':
+            self.ui.le_INDICCD.setText(data['value'])
+        elif data['Name'] == 'WEATHER':
+            self.ui.le_INDIWeather.setText(data['value'])
+        elif data['Name'] == 'CameraStatus':
+            self.imageWindow.ui.le_INDICameraStatus.setText(data['value'])
+
+    def setShowAlignmentModelMode(self):
+        if self.ui.checkPolarPlot.isChecked():
+            self.ui.alignErrorStars.setVisible(False)
+        else:
+            self.ui.alignErrorStars.setVisible(True)
 
     @QtCore.Slot(bool)
     def setMountStatus(self, status):
@@ -670,120 +727,111 @@ class MountWizzardApp(widget.MwWidget):
         else:
             self.ui.btn_driverMountConnected.setStyleSheet('QPushButton {background-color: red;}')
 
-    def setShowAlignmentModelMode(self):
-        if self.ui.checkPolarPlot.isChecked():
-            self.ui.alignErrorStars.setVisible(False)
-        else:
-            self.ui.alignErrorStars.setVisible(True)
-
     @QtCore.Slot(dict)
-    def fillMountData(self, data):
-        if data['Name'] == 'Reply':
-            pass
-        if data['Name'] == 'GetDualAxisTracking':
-            if data['Value'] == '1':
-                self.ui.le_telescopeDualTrack.setText('ON')
-            else:
-                self.ui.le_telescopeDualTrack.setText('OFF')
-        if data['Name'] == 'NumberAlignmentStars':
-            self.ui.le_alignNumberStars.setText(str(data['Value']))
-        if data['Name'] == 'ModelRMSError':
-            self.ui.le_alignErrorRMS.setText(str(data['Value']))
-        if data['Name'] == 'ModelErrorPosAngle':
-            self.ui.le_alignErrorPosAngle.setText(str(data['Value']))
-        if data['Name'] == 'ModelPolarError':
-            self.ui.le_alignErrorPolar.setText(str(data['Value']))
-        if data['Name'] == 'ModelOrthoError':
-            self.ui.le_alignErrorOrtho.setText(str(data['Value']))
-        if data['Name'] == 'ModelTerms':
-            self.ui.le_alignNumberTerms.setText(str(data['Value']))
-        if data['Name'] == 'ModelKnobTurnAz':
-            self.ui.le_alignKnobTurnAz.setText(str(data['Value']))
-        if data['Name'] == 'ModelKnobTurnAlt':
-            self.ui.le_alignKnobTurnAlt.setText(str(data['Value']))
-        if data['Name'] == 'ModelErrorAz':
-            self.ui.le_alignErrorAz.setText(str(data['Value']))
-        if data['Name'] == 'ModelErrorAlt':
-            self.ui.le_alignErrorAlt.setText(str(data['Value']))
-        if data['Name'] == 'ModelStarError':
-            if data['Value'] == 'delete':
-                self.ui.alignErrorStars.setText('')
-            else:
-                self.ui.alignErrorStars.setText(self.ui.alignErrorStars.toPlainText() + data['Value'])
-                self.ui.alignErrorStars.moveCursor(QTextCursor.End)
-        if data['Name'] == 'GetCurrentHorizonLimitLow':
-            self.ui.le_horizonLimitLow.setText(str(data['Value']))
-        if data['Name'] == 'GetCurrentHorizonLimitHigh':
-            self.ui.le_horizonLimitHigh.setText(str(data['Value']))
-        if data['Name'] == 'GetCurrentSiteLongitude':
-            self.ui.le_siteLongitude.setText(str(data['Value']))
-        if data['Name'] == 'GetCurrentSiteLatitude':
-            self.ui.le_siteLatitude.setText(str(data['Value']))
-        if data['Name'] == 'GetCurrentSiteElevation':
-            self.ui.le_siteElevation.setText(str(data['Value']))
-        if data['Name'] == 'GetJulianDate':
-            self.ui.le_JulianDate.setText(str(data['Value']))
-        if data['Name'] == 'GetLocalSiderealTime':
-            self.ui.le_localSiderealTime.setText(str(data['Value']))
-        if data['Name'] == 'GetTelescopeTempDEC':
-            self.ui.le_telescopeTempDECMotor.setText(str(data['Value']))
-        if data['Name'] == 'GetRefractionTemperature':
-            self.ui.le_refractionTemperature.setText(str(data['Value']))
-        if data['Name'] == 'GetRefractionPressure':
-            self.ui.le_refractionPressure.setText(str(data['Value']))
-        if data['Name'] == 'GetRefractionStatus':
-            if data['Value'] == '1':
-                self.ui.le_refractionStatus.setText('ON')
-            else:
-                self.ui.le_refractionStatus.setText('OFF')
-        if data['Name'] == 'GetMountStatus':
-            self.ui.le_mountStatus.setText(str(self.mount.statusReference[data['Value']]))
-        if data['Name'] == 'GetTelescopeDEC':
-            self.ui.le_telescopeDEC.setText(data['Value'])
-        if data['Name'] == 'GetTelescopeRA':
-            self.ui.le_telescopeRA.setText(str(data['Value']))
-        if data['Name'] == 'GetTelescopeAltitude':
-            self.ui.le_telescopeAltitude.setText(str(data['Value']))
-            self.modelWindow.ui.le_telescopeAltitude.setText(str(data['Value']))
-        if data['Name'] == 'GetTelescopeAzimuth':
-            self.ui.le_telescopeAzimut.setText(str(data['Value']))
-            self.modelWindow.ui.le_telescopeAzimut.setText(str(data['Value']))
-        if data['Name'] == 'GetSlewRate':
-            self.ui.le_slewRate.setText(str(data['Value']))
-        if data['Name'] == 'GetMeridianLimitTrack':
-            self.ui.le_meridianLimitTrack.setText(str(data['Value']))
-        if data['Name'] == 'GetMeridianLimitSlew':
-            self.ui.le_meridianLimitSlew.setText(str(data['Value']))
-        if data['Name'] == 'GetUnattendedFlip':
-            if data['Value'] == '1':
-                self.ui.le_telescopeUnattendedFlip.setText('ON')
-            else:
-                self.ui.le_telescopeUnattendedFlip.setText('OFF')
-        if data['Name'] == 'GetTimeToFlip':
-            self.ui.le_timeToFlip.setText(str(data['Value']))
-        if data['Name'] == 'GetTimeToMeridian':
-            self.ui.le_timeToMeridian.setText(str(data['Value']))
-        if data['Name'] == 'GetFirmwareProductName':
-            self.ui.le_firmwareProductName.setText(str(data['Value']))
-        if data['Name'] == 'GetFirmwareNumber':
-            self.ui.le_firmwareNumber.setText(str(data['Value']))
-        if data['Name'] == 'GetFirmwareDate':
-            self.ui.le_firmwareDate.setText(str(data['Value']))
-        if data['Name'] == 'GetFirmwareTime':
-            self.ui.le_firmwareTime.setText(str(data['Value']))
-        if data['Name'] == 'GetHardwareVersion':
-            self.ui.le_hardwareVersion.setText(str(data['Value']))
-        if data['Name'] == 'GetTelescopePierSide':
-            self.ui.le_telescopePierSide.setText(str(data['Value']))
-        if data['Name'] == 'GetUTCDataValid':
-            if data['Value'] == 'V':
-                self.ui.le_UTCDataValid.setText('VALID')
-            elif data['Value'] == 'E':
-                self.ui.le_UTCDataValid.setText('EXPIRED')
-            else:
-                self.ui.le_UTCDataValid.setText('INVALID')
-        if data['Name'] == 'GetUTCDataExpirationDate':
-            self.ui.le_UTCDataExpirationDate.setText(str(data['Value']))
+    def fillMountData(self):
+        for valueName in self.mount.data:
+            if valueName == 'Reply':
+                pass
+            if valueName == 'DualAxisTracking':
+                if self.mount.data[valueName] == '1':
+                    self.ui.le_telescopeDualTrack.setText('ON')
+                else:
+                    self.ui.le_telescopeDualTrack.setText('OFF')
+            if valueName == 'NumberAlignmentStars':
+                self.ui.le_alignNumberStars.setText(str(self.mount.data[valueName]))
+            if valueName == 'ModelRMSError':
+                self.ui.le_alignErrorRMS.setText(str(self.mount.data[valueName]))
+            if valueName == 'ModelErrorPosAngle':
+                self.ui.le_alignErrorPosAngle.setText(str(self.mount.data[valueName]))
+            if valueName == 'ModelPolarError':
+                self.ui.le_alignErrorPolar.setText(str(self.mount.data[valueName]))
+            if valueName == 'ModelOrthoError':
+                self.ui.le_alignErrorOrtho.setText(str(self.mount.data[valueName]))
+            if valueName == 'ModelTerms':
+                self.ui.le_alignNumberTerms.setText(str(self.mount.data[valueName]))
+            if valueName == 'ModelKnobTurnAz':
+                self.ui.le_alignKnobTurnAz.setText(str(self.mount.data[valueName]))
+            if valueName == 'ModelKnobTurnAlt':
+                self.ui.le_alignKnobTurnAlt.setText(str(self.mount.data[valueName]))
+            if valueName == 'ModelErrorAz':
+                self.ui.le_alignErrorAz.setText(str(self.mount.data[valueName]))
+            if valueName == 'ModelErrorAlt':
+                self.ui.le_alignErrorAlt.setText(str(self.mount.data[valueName]))
+            if valueName == 'ModelStarError':
+                    self.ui.alignErrorStars.setText(self.mount.data[valueName])
+            if valueName == 'CurrentHorizonLimitLow':
+                self.ui.le_horizonLimitLow.setText(str(self.mount.data[valueName]))
+            if valueName == 'CurrentHorizonLimitHigh':
+                self.ui.le_horizonLimitHigh.setText(str(self.mount.data[valueName]))
+            if valueName == 'CurrentSiteLongitude':
+                self.ui.le_siteLongitude.setText(str(self.mount.data[valueName]))
+            if valueName == 'CurrentSiteLatitude':
+                self.ui.le_siteLatitude.setText(str(self.mount.data[valueName]))
+            if valueName == 'CurrentSiteElevation':
+                self.ui.le_siteElevation.setText(str(self.mount.data[valueName]))
+            if valueName == 'JulianDate':
+                self.ui.le_JulianDate.setText(str(self.mount.data[valueName]))
+            if valueName == 'LocalSiderealTime':
+                self.ui.le_localSiderealTime.setText(str(self.mount.data[valueName]))
+            if valueName == 'TelescopeTempDEC':
+                self.ui.le_telescopeTempDECMotor.setText(str(self.mount.data[valueName]))
+            if valueName == 'RefractionTemperature':
+                self.ui.le_refractionTemperature.setText(str(self.mount.data[valueName]))
+            if valueName == 'RefractionPressure':
+                self.ui.le_refractionPressure.setText(str(self.mount.data[valueName]))
+            if valueName == 'RefractionStatus':
+                if self.mount.data[valueName] == '1':
+                    self.ui.le_refractionStatus.setText('ON')
+                else:
+                    self.ui.le_refractionStatus.setText('OFF')
+            if valueName == 'MountStatus':
+                self.ui.le_mountStatus.setText(str(self.mount.statusReference[self.mount.data[valueName]]))
+            if valueName == 'TelescopeDEC':
+                self.ui.le_telescopeDEC.setText(self.mount.data[valueName])
+            if valueName == 'TelescopeRA':
+                self.ui.le_telescopeRA.setText(str(self.mount.data[valueName]))
+            if valueName == 'TelescopeAltitude':
+                self.ui.le_telescopeAltitude.setText(str(self.mount.data[valueName]))
+                self.modelWindow.ui.le_telescopeAltitude.setText(str(self.mount.data[valueName]))
+            if valueName == 'TelescopeAzimuth':
+                self.ui.le_telescopeAzimut.setText(str(self.mount.data[valueName]))
+                self.modelWindow.ui.le_telescopeAzimut.setText(str(self.mount.data[valueName]))
+            if valueName == 'SlewRate':
+                self.ui.le_slewRate.setText(str(self.mount.data[valueName]))
+            if valueName == 'MeridianLimitTrack':
+                self.ui.le_meridianLimitTrack.setText(str(self.mount.data[valueName]))
+            if valueName == 'MeridianLimitSlew':
+                self.ui.le_meridianLimitSlew.setText(str(self.mount.data[valueName]))
+            if valueName == 'UnattendedFlip':
+                if self.mount.data[valueName] == '1':
+                    self.ui.le_telescopeUnattendedFlip.setText('ON')
+                else:
+                    self.ui.le_telescopeUnattendedFlip.setText('OFF')
+            if valueName == 'TimeToFlip':
+                self.ui.le_timeToFlip.setText(str(self.mount.data[valueName]))
+            if valueName == 'TimeToMeridian':
+                self.ui.le_timeToMeridian.setText(str(self.mount.data[valueName]))
+            if valueName == 'FirmwareProductName':
+                self.ui.le_firmwareProductName.setText(str(self.mount.data[valueName]))
+            if valueName == 'FirmwareNumber':
+                self.ui.le_firmwareNumber.setText(str(self.mount.data[valueName]))
+            if valueName == 'FirmwareDate':
+                self.ui.le_firmwareDate.setText(str(self.mount.data[valueName]))
+            if valueName == 'FirmwareTime':
+                self.ui.le_firmwareTime.setText(str(self.mount.data[valueName]))
+            if valueName == 'HardwareVersion':
+                self.ui.le_hardwareVersion.setText(str(self.mount.data[valueName]))
+            if valueName == 'TelescopePierSide':
+                self.ui.le_telescopePierSide.setText(str(self.mount.data[valueName]))
+            if valueName == 'UTCDataValid':
+                if self.mount.data[valueName] == 'V':
+                    self.ui.le_UTCDataValid.setText('VALID')
+                elif self.mount.data[valueName] == 'E':
+                    self.ui.le_UTCDataValid.setText('EXPIRED')
+                else:
+                    self.ui.le_UTCDataValid.setText('INVALID')
+            if valueName == 'UTCDataExpirationDate':
+                self.ui.le_UTCDataExpirationDate.setText(str(self.mount.data[valueName]))
 
     @QtCore.Slot(int)
     def setEnvironmentStatus(self, status):
@@ -794,27 +842,27 @@ class MountWizzardApp(widget.MwWidget):
         else:
             self.ui.btn_environmentConnected.setStyleSheet('QPushButton {background-color: red;}')
 
-    def fillEnvironmentData(self, data):
-        for value in data:
-            if value == 'DewPoint':
-                self.ui.le_dewPoint.setText('{0:4.1f}'.format(data['DewPoint']))
-            elif value == 'Temperature':
-                self.ui.le_temperature.setText('{0:4.1f}'.format(data['Temperature']))
-            elif value == 'Humidity':
-                self.ui.le_humidity.setText('{0:4.1f}'.format(data['Humidity']))
-            elif value == 'Pressure':
-                self.ui.le_pressure.setText('{0:4.1f}'.format(data['Pressure']))
-            elif value == 'CloudCover':
-                self.ui.le_cloudCover.setText('{0:4.1f}'.format(data['CloudCover']))
-            elif value == 'RainRate':
-                self.ui.le_rainRate.setText('{0:4.1f}'.format(data['RainRate']))
-            elif value == 'WindSpeed':
-                self.ui.le_windSpeed.setText('{0:4.1f}'.format(data['WindSpeed']))
-            elif value == 'WindDirection':
-                self.ui.le_windDirection.setText('{0:4.1f}'.format(data['WindDirection']))
-            elif value == 'SQR':
-                self.ui.le_SQR.setText('{0:4.2f}'.format(data['SQR']))
-                self.modelWindow.ui.le_SQR.setText('{0:4.2f}'.format(data['SQR']))
+    def fillEnvironmentData(self):
+        for valueName in self.environment.data:
+            if valueName == 'DewPoint':
+                self.ui.le_dewPoint.setText('{0:4.1f}'.format(self.environment.data[valueName]))
+            elif valueName == 'Temperature':
+                self.ui.le_temperature.setText('{0:4.1f}'.format(self.environment.data[valueName]))
+            elif valueName == 'Humidity':
+                self.ui.le_humidity.setText('{0:4.1f}'.format(self.environment.data[valueName]))
+            elif valueName == 'Pressure':
+                self.ui.le_pressure.setText('{0:4.1f}'.format(self.environment.data[valueName]))
+            elif valueName == 'CloudCover':
+                self.ui.le_cloudCover.setText('{0:4.1f}'.format(self.environment.data[valueName]))
+            elif valueName == 'RainRate':
+                self.ui.le_rainRate.setText('{0:4.1f}'.format(self.environment.data[valueName]))
+            elif valueName == 'WindSpeed':
+                self.ui.le_windSpeed.setText('{0:4.1f}'.format(self.environment.data[valueName]))
+            elif valueName == 'WindDirection':
+                self.ui.le_windDirection.setText('{0:4.1f}'.format(self.environment.data[valueName]))
+            elif valueName == 'SQR':
+                self.ui.le_SQR.setText('{0:4.2f}'.format(self.environment.data[valueName]))
+                self.modelWindow.ui.le_SQR.setText('{0:4.2f}'.format(self.environment.data[valueName]))
 
     @QtCore.Slot(int)
     def setCameraPlateStatus(self, status):
@@ -837,13 +885,11 @@ class MountWizzardApp(widget.MwWidget):
             self.ui.btn_domeConnected.setStyleSheet('QPushButton {background-color: red;}')
 
     def mainLoop(self):
-        while not self.mountDataQueue.empty():
-            data = self.mountDataQueue.get()
-            self.fillMountData(data)
-            self.mountDataQueue.task_done()
-        while not self.environmentQueue.empty():
-            data = self.environmentQueue.get()
-            self.fillEnvironmentData(data)
+        self.fillMountData()
+        self.fillEnvironmentData()
+        while not self.INDIDataQueue.empty():
+            data = self.INDIDataQueue.get()
+            self.fillINDIData(data)
         while not self.messageQueue.empty():
             text = self.messageQueue.get()
             self.ui.errorStatus.setText(self.ui.errorStatus.toPlainText() + text + '\n')
@@ -896,24 +942,21 @@ if __name__ == "__main__":
         logging.error(traceback.format_exception(typeException, valueException, tbackException))
         sys.__excepthook__(typeException, valueException, tbackException)                                                   # then call the default handler
 
-    BUILD_NO = '2.5.14 beta'
+    BUILD_NO = '2.5.18 beta'
 
-    # from snippets.parallel.model import NEWMODEL
-    # test = NEWMODEL()
-
-    warnings.filterwarnings("ignore")                                                                                       # get output from console
-    name = 'mount.{0}.log'.format(datetime.datetime.now().strftime("%Y-%m-%d"))                                             # define log file
-    handler = logging.handlers.RotatingFileHandler(name, backupCount=3)                                                     # define log handler
+    warnings.filterwarnings("ignore")
+    name = 'mount.{0}.log'.format(datetime.datetime.now().strftime("%Y-%m-%d"))
+    handler = logging.handlers.RotatingFileHandler(name, backupCount=3)
     logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s [%(levelname)7s][%(filename)20s][%(funcName)20s] - %(message)s',
-                        handlers=[handler], datefmt='%Y-%m-%d %H:%M:%S')                                                    # define log format
+                        format='%(asctime)s [%(levelname)7s][%(filename)20s][%(lineno)5s][%(funcName)20s] - %(message)s',
+                        handlers=[handler], datefmt='%Y-%m-%d %H:%M:%S')
 
-    if not os.path.isdir(os.getcwd() + '/analysedata'):                                                                     # if analyse dir doesn't exist, make it
-        os.makedirs(os.getcwd() + '/analysedata')                                                                           # if path doesn't exist, generate is
-    if not os.path.isdir(os.getcwd() + '/images'):                                                                          # if images dir doesn't exist, make it
-        os.makedirs(os.getcwd() + '/images')                                                                                # if path doesn't exist, generate is
-    if not os.path.isdir(os.getcwd() + '/config'):                                                                          # if config dir doesn't exist, make it
-        os.makedirs(os.getcwd() + '/config')                                                                                # if path doesn't exist, generate is
+    if not os.path.isdir(os.getcwd() + '/analysedata'):
+        os.makedirs(os.getcwd() + '/analysedata')
+    if not os.path.isdir(os.getcwd() + '/images'):
+        os.makedirs(os.getcwd() + '/images')
+    if not os.path.isdir(os.getcwd() + '/config'):
+        os.makedirs(os.getcwd() + '/config')
 
     logging.info('-----------------------------------------')
     logging.info('MountWizzard v ' + BUILD_NO + ' started !')
@@ -933,21 +976,20 @@ if __name__ == "__main__":
     if not os.access(os.getcwd() + '/analysedata', os.W_OK):
         logging.error('no write access to /analysedata')
 
-    QApplication.setAttribute(Qt.AA_Use96Dpi)                                                                               # try to overcome windows, seems not to work
-    app = QApplication(sys.argv)                                                                                            # built application
+    app = QApplication(sys.argv)
 
-    sys.excepthook = except_hook                                                                                            # manage except hooks for logging
+    sys.excepthook = except_hook
     # noinspection PyCallByClass,PyTypeChecker,PyArgumentList
-    app.setStyle(QStyleFactory.create('Fusion'))                                                                            # set theme
+    app.setStyle(QStyleFactory.create('Fusion'))
     app.setWindowIcon(QIcon('mw.ico'))
 
-    mountApp = MountWizzardApp()                                                                                            # instantiate Application
-    if mountApp.modelWindow.showStatus:                                                                                     # if windows was shown last run, open it directly
-        mountApp.modelWindow.redrawModelingWindow()                                                                         # update content
-        mountApp.modelWindow.showModelingPlotWindow()                                                                       # show it
-    if mountApp.imageWindow.showStatus:                                                                                     # if windows was shown last run, open it directly
-        mountApp.imageWindow.showImageWindow()                                                                              # show it
-    if mountApp.analyseWindow.showStatus:                                                                                   # if windows was shown last run, open it directly
-        mountApp.analyseWindow.showAnalyseWindow()                                                                          # show it
-    mountApp.show()                                                                                                         # show it
-    sys.exit(app.exec_())                                                                                                   # close application
+    mountApp = MountWizzardApp()
+    if mountApp.modelWindow.showStatus:
+        mountApp.modelWindow.redrawModelingWindow()
+        mountApp.modelWindow.showModelingPlotWindow()
+    if mountApp.imageWindow.showStatus:
+        mountApp.imageWindow.showImageWindow()
+    if mountApp.analyseWindow.showStatus:
+        mountApp.analyseWindow.showAnalyseWindow()
+    mountApp.show()
+    sys.exit(app.exec_())

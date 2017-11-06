@@ -96,7 +96,7 @@ class Transform:
         if suc != 0:
             self.logger.error('error result : {0} in eraDat year: {1}, month: {2}, day: {3}'.format(suc, ts.year, ts.month, ts.day))
         dut1 = 37 + 4023.0 / 125.0 - dut1_prev
-        jd = float(self.app.mount.jd)
+        jd = float(self.app.mount.data['JulianDate'])
         suc, tai1, tai2 = self.ERFA.eraUtctai(jd, 0)
         if suc != 0:
             self.logger.error('error result : {0} in eraUtctai jd: {1}'.format(suc, jd))

@@ -3,6 +3,7 @@ matplotlib>=1.5.3
 pypiwin32>=219
 pyfits>=3.4
 wakeonlan>=0.2.2
+pywinauto>=0.6.3
 numpy
 requests
 

@@ -1,6 +1,34 @@
 # Changelog
+2.5.18
+- some more bugfixes discovered by further development
+
+2.5.17
+- bugfix keep refinement model
+- bugfix index key wrong
+- update for jerky mouse movements
+- robustness for error reported be barry
+
+2.5.16
+- bugfix in platesolvesync
+- enabling parallel precessing
+- bugfix load old data
+
+2.5.15
+- refactoring threads
+- refactoring data management mount thread and environment thread
+- restored canceling modeling run
+- bugfix in cancel routine added mor logging
+- refactoring data transfer from and to mount
+- reorganizing code for readability
+- added enable disable indi client running
+- enabling window and taskbar icon
+
 2.5.14
--
+- updated indi functions
+- refactored indi client
+- fixed bug with closing application (Dave's issue)
+- added mor robustness to QCI Updater automation (Dave's issue)
+- removed INDI from usage
 
 2.5.13
 - changed behaviour environment

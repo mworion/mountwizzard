@@ -39,6 +39,7 @@ class SGPro(MWCamera):
         self.getSolvedImageDataPath = 'SgGetSolvedImageData'
         self.solveImagePath = 'SgSolveImage'
         self.appExe = 'Sequence Generator.exe'
+        self.checkAppInstall()
 
     def checkAppInstall(self):
         if platform.system() == 'Windows':
@@ -58,24 +59,24 @@ class SGPro(MWCamera):
             self.cameraConnected = False
 
     def getImage(self, modelData):
-        suc, mes, guid = self.SgCaptureImage(binningMode=modelData['binning'],
-                                             exposureLength=modelData['exposure'],
-                                             iso=str(modelData['iso']),
-                                             gain=modelData['gainValue'],
-                                             speed=modelData['speed'],
+        suc, mes, guid = self.SgCaptureImage(binningMode=modelData['Binning'],
+                                             exposureLength=modelData['Exposure'],
+                                             iso=str(modelData['Iso']),
+                                             gain=modelData['GainValue'],
+                                             speed=modelData['Speed'],
                                              frameType='Light',
-                                             filename=modelData['file'],
-                                             path=modelData['base_dir_images'],
-                                             useSubframe=modelData['canSubframe'],
-                                             posX=modelData['offX'],
-                                             posY=modelData['offY'],
-                                             width=modelData['sizeX'],
-                                             height=modelData['sizeY'])
-        modelData['imagepath'] = ''
+                                             filename=modelData['File'],
+                                             path=modelData['BaseDirImages'],
+                                             useSubframe=modelData['CanSubframe'],
+                                             posX=modelData['OffX'],
+                                             posY=modelData['OffY'],
+                                             width=modelData['SizeX'],
+                                             height=modelData['SizeY'])
+        modelData['ImagePath'] = ''
         self.logger.info('message: {0}'.format(mes))
         if suc:                                                                                                             # if we successfully starts imaging, we ca move on
             while True:                                                                                                     # waiting for the image download before proceeding
-                suc, modelData['imagepath'] = self.SgGetImagePath(guid)                                                     # there is the image path, once the image is downloaded
+                suc, modelData['ImagePath'] = self.SgGetImagePath(guid)                                                     # there is the image path, once the image is downloaded
                 if suc:                                                                                                     # until then, the link is only the receipt
                     break                                                                                                   # stopping the loop
                 else:                                                                                                       # otherwise
@@ -83,10 +84,10 @@ class SGPro(MWCamera):
         return suc, mes, modelData
 
     def solveImage(self, modelData):
-        suc, mes, guid = self.SgSolveImage(modelData['imagepath'],
-                                           scaleHint=modelData['scaleHint'],
-                                           blindSolve=modelData['blind'],
-                                           useFitsHeaders=modelData['usefitsheaders'])
+        suc, mes, guid = self.SgSolveImage(modelData['ImagePath'],
+                                           scaleHint=modelData['ScaleHint'],
+                                           blindSolve=modelData['Blind'],
+                                           useFitsHeaders=modelData['UseFitsHeaders'])
         if not suc:
             self.logger.warning('no start {0}'.format(mes))
             return False, mes, modelData
@@ -96,11 +97,11 @@ class SGPro(MWCamera):
             if mes[:7] in ['Matched', 'Solve t', 'Valid s', 'succeed']:                                                     # if there is success, we can move on
                 self.logger.info('modelData {0}'.format(modelData))
                 solved = True
-                modelData['dec_sol'] = float(dec_sol)                                                                       # convert values to float, should be stored in float not string
-                modelData['ra_sol'] = float(ra_sol)
-                modelData['scale'] = float(scale)
-                modelData['angle'] = float(angle)
-                modelData['timeTS'] = float(timeTS)
+                modelData['RaJ2000Solved'] = float(ra_sol)
+                modelData['DecJ2000Solved'] = float(dec_sol)                                                                       # convert values to float, should be stored in float not string
+                modelData['Scale'] = float(scale)
+                modelData['Angle'] = float(angle)
+                modelData['TimeTS'] = float(timeTS)
                 break
             elif mes != 'Solving':                                                                                          # general error
                 solved = False
@@ -110,7 +111,7 @@ class SGPro(MWCamera):
             #    solved = False
             #    break
             else:                                                                                                           # otherwise
-                if modelData['blind']:                                                                                      # when using blind solve, it takes 30-60 s
+                if modelData['Blind']:                                                                                      # when using blind solve, it takes 30-60 s
                     time.sleep(5)                                                                                           # therefore slow cycle
                 else:                                                                                                       # local solver takes 1-2 s
                     time.sleep(.25)                                                                                         # therefore quicker cycle
@@ -246,17 +247,19 @@ class SGPro(MWCamera):
 
 
 if __name__ == "__main__":
-    max = 20
     cam = SGPro(MWCamera)
     print(cam.getCameraProps())
-    value = {'binning': 1, 'exposure': 1, 'iso': 100,
-             'gainValue': 'Not Set', 'speed': 'HiSpeed',
-             'file': 'test.fit', 'base_dir_images': 'c:/temp',
-             'canSubframe': True, 'offX': 0, 'offY': 0,
-             'sizeX': 3388, 'sizeY': 2712}
-    t_start = time.time()
-    for i in range(0, max):
-        print(i)
-        cam.getImage(value)
-    t_stop = time.time()
-    print((t_stop - t_start - max) / max)
+    '''
+    value = {'Binning': 1, 'Exposure': 1, 'Iso': 100,
+             'GainValue': 'Not Set', 'Speed': 'HiSpeed',
+             'File': 'test.fit', 'BaseDirImages': 'c:/temp',
+             'CanSubframe': True, 'OffX': 0, 'OffY': 0,
+             'SizeX': 3388, 'SizeY': 2712}
+    '''
+    suci, msgi, guidi = cam.SgCaptureImage(binningMode=1, exposureLength=10, gain='Not Set', iso=100, speed='HighSpeed', frameType='Light', path='c:\\temp\\', filename= 'test.fit', useSubframe=False, posX=0, posY=0, width=1, height=1)
+    suc, msg, guid = cam.SgSolveImage(path='C:\\Users\\mw\\Projects\\mountwizzard\\mountwizzard\\model001.fit', scaleHint=1.3, useFitsHeaders=True)
+    print(suci, msgi, guidi, suc, msg, guid)
+    while True:
+        print(cam.SgGetImagePath(guidi))
+        print(cam.SgGetSolvedImageData(guid))
+        time.sleep(1)
