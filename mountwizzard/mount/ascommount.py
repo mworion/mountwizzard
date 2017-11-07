@@ -88,91 +88,92 @@ class MountAscom:
                     else:
                         value = '0'
         else:                                                                                                               # from here we doing the simulation for 10micron mounts commands
-            if command == 'Gev':                                                                                            # which are special, but only for the most important for MW to run
-                value = str(self.ascom.SiteElevation)
-            elif command == 'Gmte':
-                value = '0125'
-            elif command == 'Gt':
-                value = transform.Transform.decimalToDegree(self.ascom.SiteLatitude, True, False)
-            elif command == 'Gg':
-                lon = transform.Transform.decimalToDegree(self.ascom.SiteLongitude, True, False)
-                if lon[0] == '-':                                                                                           # due to compatibility to LX200 protocol east is negative
-                    lon1 = lon.replace('-', '+')                                                                            # change that
-                else:
-                    lon1 = lon.replace('+', '-')                                                                            # and vice versa
-                value = lon1
-            elif command.startswith('Sz'):
-                self.value_azimuth = float(command[2:5]) + float(command[6:8]) / 60
-            elif command.startswith('Sa'):
-                self.value_altitude = float(command[2:5]) + float(command[6:8]) / 60
-            elif command == 'MS':
-                self.ascom.Tracking = False
-                self.ascom.SlewToAltAzAsync(self.value_azimuth, self.value_altitude)
-                self.ascom.Tracking = True
-            elif command == 'MA':
-                self.ascom.Tracking = False
-                self.ascom.SlewToAltAzAsync(self.value_azimuth, self.value_altitude)
-                self.ascom.Tracking = False
-            elif command == 'GS':
-                value = transform.Transform.decimalToDegree(self.ascom.SiderealTime, False, False)
-            elif command == 'GRTMP':
-                value = '10.0'
-            elif command == 'Ginfo':
-                raJnow = self.ascom.RightAscension
-                decJnow = self.ascom.Declination
-                az = self.ascom.Azimuth
-                alt = self.ascom.Altitude
-                if self.ascom.Slewing:
-                    stat = 6
-                else:
-                    if self.ascom.Tracking:
-                        stat = 0
+            if self.ascom:
+                if command == 'Gev':                                                                                            # which are special, but only for the most important for MW to run
+                    value = str(self.ascom.SiteElevation)
+                elif command == 'Gmte':
+                    value = '0125'
+                elif command == 'Gt':
+                    value = transform.Transform.decimalToDegree(self.ascom.SiteLatitude, True, False)
+                elif command == 'Gg':
+                    lon = transform.Transform.decimalToDegree(self.ascom.SiteLongitude, True, False)
+                    if lon[0] == '-':                                                                                           # due to compatibility to LX200 protocol east is negative
+                        lon1 = lon.replace('-', '+')                                                                            # change that
                     else:
-                        stat = 7
-                jd = self.ascom.SiderealTime + 2440587.5
-                if self.ascom.SideOfPier == 0:
-                    pierside = 'E'
+                        lon1 = lon.replace('+', '-')                                                                            # and vice versa
+                    value = lon1
+                elif command.startswith('Sz'):
+                    self.value_azimuth = float(command[2:5]) + float(command[6:8]) / 60
+                elif command.startswith('Sa'):
+                    self.value_altitude = float(command[2:5]) + float(command[6:8]) / 60
+                elif command == 'MS':
+                    self.ascom.Tracking = False
+                    self.ascom.SlewToAltAzAsync(self.value_azimuth, self.value_altitude)
+                    self.ascom.Tracking = True
+                elif command == 'MA':
+                    self.ascom.Tracking = False
+                    self.ascom.SlewToAltAzAsync(self.value_azimuth, self.value_altitude)
+                    self.ascom.Tracking = False
+                elif command == 'GS':
+                    value = transform.Transform.decimalToDegree(self.ascom.SiderealTime, False, False)
+                elif command == 'GRTMP':
+                    value = '10.0'
+                elif command == 'Ginfo':
+                    raJnow = self.ascom.RightAscension
+                    decJnow = self.ascom.Declination
+                    az = self.ascom.Azimuth
+                    alt = self.ascom.Altitude
+                    if self.ascom.Slewing:
+                        stat = 6
+                    else:
+                        if self.ascom.Tracking:
+                            stat = 0
+                        else:
+                            stat = 7
+                    jd = self.ascom.SiderealTime + 2440587.5
+                    if self.ascom.SideOfPier == 0:
+                        pierside = 'E'
+                    else:
+                        pierside = 'W'
+                    if self.ascom.Slewing:
+                        slew = 1
+                    else:
+                        slew = 0
+                    value = '{0},{1},{2},{3},{4},{5},{6},{7}#'.format(raJnow, decJnow, pierside, az, alt, jd, stat, slew)
+                elif command == 'PO':
+                    self.ascom.Unpark()
+                elif command == 'hP':
+                    self.ascom.Park()
+                elif command == 'AP':
+                    self.ascom.Tracking = True
+                elif command == 'RT9':
+                    self.ascom.Tracking = False
+                elif command == 'GTMP1':
+                    value = '10.0'
+                elif command == 'GRPRS':
+                    value = '990.0'
+                elif command == 'Guaf':
+                    value = '0'
+                elif command == 'GMs':
+                    value = '15'
+                elif command == 'Gh':
+                    value = '90'
+                elif command == 'Go':
+                    value = '00'
+                elif command == 'Gdat':
+                    value = '0'
+                elif command in ['GVD', 'GVN', 'GVP', 'GVT', 'GVZ']:
+                    value = 'Simulation'
+                elif command == 'GREF':
+                    value = '1'
+                elif command == 'CMS':
+                    value = 'V'
+                elif command == 'getalst':
+                    value = '-1'
+                elif command == 'GDUTV':
+                    value = '1,1'
                 else:
-                    pierside = 'W'
-                if self.ascom.Slewing:
-                    slew = 1
-                else:
-                    slew = 0
-                value = '{0},{1},{2},{3},{4},{5},{6},{7}#'.format(raJnow, decJnow, pierside, az, alt, jd, stat, slew)
-            elif command == 'PO':
-                self.ascom.Unpark()
-            elif command == 'hP':
-                self.ascom.Park()
-            elif command == 'AP':
-                self.ascom.Tracking = True
-            elif command == 'RT9':
-                self.ascom.Tracking = False
-            elif command == 'GTMP1':
-                value = '10.0'
-            elif command == 'GRPRS':
-                value = '990.0'
-            elif command == 'Guaf':
-                value = '0'
-            elif command == 'GMs':
-                value = '15'
-            elif command == 'Gh':
-                value = '90'
-            elif command == 'Go':
-                value = '00'
-            elif command == 'Gdat':
-                value = '0'
-            elif command in ['GVD', 'GVN', 'GVP', 'GVT', 'GVZ']:
-                value = 'Simulation'
-            elif command == 'GREF':
-                value = '1'
-            elif command == 'CMS':
-                value = 'V'
-            elif command == 'getalst':
-                value = '-1'
-            elif command == 'GDUTV':
-                value = '1,1'
-            else:
-                value = '0'
+                    value = '0'
         self.sendCommandLock.release()
         return value
 
@@ -180,6 +181,7 @@ class MountAscom:
         try:
             if self.ascom:
                 self.ascom.connected = False
+                self.ascom = None
             self.chooser = Dispatch('ASCOM.Utilities.Chooser')
             self.chooser.DeviceType = 'Telescope'
             self.driverName = self.chooser.Choose(self.driverName)

@@ -342,8 +342,8 @@ class Modeling(PyQt5.QtCore.QThread):
                     self.modelPoints.generateDSOPoints(int(float(self.app.ui.numberHoursDSO.value())),
                                                        int(float(self.app.ui.numberPointsDSO.value())),
                                                        int(float(self.app.ui.numberHoursPreview.value())),
-                                                       copy.copy(self.app.mount.ra),
-                                                       copy.copy(self.app.mount.dec))
+                                                       copy.copy(self.app.mount.data['RaJNow']),
+                                                       copy.copy(self.app.mount.data['DecJNow']))
                     if self.app.ui.checkSortPoints.isChecked():
                         self.modelPoints.sortPoints('refinement')
                     if self.app.ui.checkDeletePointsHorizonMask.isChecked():
