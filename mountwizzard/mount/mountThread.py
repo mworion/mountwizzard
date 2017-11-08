@@ -279,6 +279,8 @@ class Mount(PyQt5.QtCore.QThread):
         return int(self.mountHandler.sendCommand('getalst'))
 
     def getAlignmentModelStatus(self, alignModel):
+        if self.data['FW'] < 21500:
+            return alignModel
         try:
             reply = self.mountHandler.sendCommand('getain')
             # there should be a reply, format string is "ZZZ.ZZZZ,+AA.AAAA,EE.EEEE,PPP.PP,+OO.OOOO,+aa.aa, +bb.bb,NN,RRRRR.R#"
@@ -641,11 +643,12 @@ class Mount(PyQt5.QtCore.QThread):
         self.data['CurrentHorizonLimitHigh'] = self.mountHandler.sendCommand('Gh')
         self.data['CurrentHorizonLimitLow'] = self.mountHandler.sendCommand('Go')
         try:
-            reply = self.mountHandler.sendCommand('GDUTV')
-            if reply:
-                valid, expirationDate = reply.split(',')
-                self.data['UTCDataValid'] = valid
-                self.data['UTCDataExpirationDate'] = expirationDate
+            if self.data['FW'] >= 21500:
+                reply = self.mountHandler.sendCommand('GDUTV')
+                if reply:
+                    valid, expirationDate = reply.split(',')
+                    self.data['UTCDataValid'] = valid
+                    self.data['UTCDataExpirationDate'] = expirationDate
         except Exception as e:
             self.logger.error('receive error GDUTV command: {0}'.format(e))
         finally:
@@ -667,10 +670,13 @@ class Mount(PyQt5.QtCore.QThread):
         self.data['CurrentSiteLatitude'] = self.site_lat
         self.data['FirmwareDate'] = self.mountHandler.sendCommand('GVD')
         self.data['FirmwareNumber'] = self.mountHandler.sendCommand('GVN')
+        fw = self.data['FirmwareNumber'].split('.')
+        if len(fw) == 3:
+            self.data['FW'] = int(float(fw[0]) * 10000 + float(fw[1]) * 100 + float(fw[2]))
         self.data['FirmwareProductName'] = self.mountHandler.sendCommand('GVP')
         self.data['FirmwareTime'] = self.mountHandler.sendCommand('GVT')
         self.data['HardwareVersion'] = self.mountHandler.sendCommand('GVZ')
-        self.logger.info('FW:{0}'.format(self.mountHandler.sendCommand('GVN')))
+        self.logger.info('FW: {0} Number: {1}'.format(self.mountHandler.sendCommand('GVN'), self.data['FW']))
         self.logger.info('Site Lon:{0}'.format(self.site_lon))
         self.logger.info('Site Lat:{0}'.format(self.site_lat))
         self.logger.info('Site Height:{0}'.format(self.site_height))

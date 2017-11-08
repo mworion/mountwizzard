@@ -17,6 +17,7 @@ import time
 from pywinauto import findwindows
 # import .NET / COM Handling
 from win32com.client.dynamic import Dispatch
+import pythoncom
 # base for cameras
 from baseclasses.camera import MWCamera
 
@@ -58,6 +59,7 @@ class MaximDLCamera(MWCamera):
     def connectCamera(self):
         if self.appRunning:
             try:
+                pythoncom.CoInitialize()
                 if not self.maximCamera:
                     self.maximCamera = Dispatch(self.driverNameCamera)
                 if not self.maximDocument:

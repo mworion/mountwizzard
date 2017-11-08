@@ -1,4 +1,9 @@
 # Changelog
+2.5.20
+- bugfix
+- added some backward compatibility to older firmwares
+- added some support for threading in maximDL
+
 2.5.19
 - performance optimizations
 - bugfixes
