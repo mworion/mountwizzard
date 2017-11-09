@@ -13,11 +13,11 @@
 ############################################################
 import logging
 import time
+import PyQt5
 # windows automation
 from pywinauto import findwindows
 # import .NET / COM Handling
 from win32com.client.dynamic import Dispatch
-import pythoncom
 # base for cameras
 from baseclasses.camera import MWCamera
 
@@ -59,14 +59,14 @@ class MaximDLCamera(MWCamera):
     def connectCamera(self):
         if self.appRunning:
             try:
-                pythoncom.CoInitialize()
-                if not self.maximCamera:
-                    self.maximCamera = Dispatch(self.driverNameCamera)
-                if not self.maximDocument:
-                    self.maximDocument = Dispatch(self.driverNameDocument)
-                if not self.maximCamera.LinkEnabled:
-                    self.maximCamera.LinkEnabled = True
-                self.cameraConnected = True
+                if not self.cameraConnected:
+                    if not self.maximCamera:
+                        self.maximCamera = Dispatch(self.driverNameCamera)
+                    if not self.maximDocument:
+                        self.maximDocument = Dispatch(self.driverNameDocument)
+                    if not self.maximCamera.LinkEnabled:
+                        self.maximCamera.LinkEnabled = True
+                    self.cameraConnected = True
             except Exception as e:
                 self.cameraConnected = False
                 self.logger.error('error: {0}'.format(e))

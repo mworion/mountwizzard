@@ -30,110 +30,13 @@ from camera import indicamera
 if platform.system() == 'Windows':
     from camera import maximdl
     from camera import sgpro
+    import pythoncom
 if platform.system() == 'Windows' or platform.system() == 'Darwin':
     from camera import theskyx
 # modelPoints
 from modeling import modelPoints
 # workers
 from modeling import modelWorker
-
-
-class Slewpoint(PyQt5.QtCore.QObject):
-
-    queuePoint = Queue()
-    signalSlewing = PyQt5.QtCore.pyqtSignal(name='slew')
-
-    def __init__(self, main):
-        super(PyQt5.QtCore.QObject, self).__init__()
-        self.main = main
-        self.isRunning = True
-        self.signalSlewing.connect(self.slewing)
-
-    @PyQt5.QtCore.pyqtSlot()
-    def run(self):
-        self.isRunning = True
-
-    @PyQt5.QtCore.pyqtSlot()
-    def stop(self):
-        self.isRunning = False
-
-    @PyQt5.QtCore.pyqtSlot()
-    def slewing(self):
-        if not self.queuePoint.empty():
-            number = self.queuePoint.get()
-            time.sleep(0.1)
-            print('Start Slewing to Point {0}'.format(number))
-            time.sleep(5)
-            print('Settling of point {0}'.format(number))
-            time.sleep(0.5)
-            print('Tracking of point {0}'.format(number))
-            self.main.workerImage.queueImage.put(number)
-            self.main.workerImage.signalImaging.emit()
-
-
-class Image(PyQt5.QtCore.QObject):
-
-    queueImage = Queue()
-    signalImaging = PyQt5.QtCore.pyqtSignal(name='image')
-
-    def __init__(self, main):
-        super(PyQt5.QtCore.QObject, self).__init__()
-        self.main = main
-        self.isRunning = True
-        self.signalImaging.connect(self.imaging)
-
-    @PyQt5.QtCore.pyqtSlot()
-    def run(self):
-        self.isRunning = True
-
-    @PyQt5.QtCore.pyqtSlot()
-    def stop(self):
-        self.isRunning = False
-
-    @PyQt5.QtCore.pyqtSlot()
-    def imaging(self):
-        if not self.queueImage.empty():
-            number = self.queueImage.get()
-            time.sleep(0.5)
-            print('Start Integration of point {0}'.format(number))
-            time.sleep(5)
-            print('Download of point {0}'.format(number))
-            self.main.workerSlewpoint.signalSlewing.emit()
-            time.sleep(2)
-            print('Store Image of point {0}'.format(number))
-            time.sleep(0.2)
-            self.main.workerPlatesolve.queuePlatesolve.put(number)
-            self.main.workerPlatesolve.signalPlatesolve.emit()
-
-
-class Platesolve(PyQt5.QtCore.QObject):
-
-    queuePlatesolve = Queue()
-    signalPlatesolve = PyQt5.QtCore.pyqtSignal(name='plate')
-
-    def __init__(self, main):
-        super(PyQt5.QtCore.QObject, self).__init__()
-        self.main = main
-        self.isRunning = True
-        self.signalPlatesolve.connect(self.platesolving)
-
-    @PyQt5.QtCore.pyqtSlot()
-    def run(self):
-        self.isRunning = True
-
-    @PyQt5.QtCore.pyqtSlot()
-    def stop(self):
-        self.isRunning = False
-
-    @PyQt5.QtCore.pyqtSlot()
-    def platesolving(self):
-        if not self.queuePlatesolve.empty():
-            number = self.queuePlatesolve.get()
-            print('Start Platesolve of point {0}'.format(number))
-            time.sleep(5)
-            print('Got coordinates of point {0}'.format(number))
-            time.sleep(0.1)
-            # self.main.workerSlewpoint.signalSlewing.emit()
 
 
 class Modeling(PyQt5.QtCore.QThread):
@@ -170,20 +73,6 @@ class Modeling(PyQt5.QtCore.QThread):
         self.transform = self.app.mount.transform
         self.modelPoints = modelPoints.ModelPoints(self.transform)
         self.modelWorker = modelWorker.ModelWorker(self.app)
-        # initialize the parallel thread modeling parts
-        self.workerSlewpoint = Slewpoint(self)
-        self.threadSlewpoint = PyQt5.QtCore.QThread()
-        self.workerSlewpoint.moveToThread(self.threadSlewpoint)
-        self.threadSlewpoint.start()
-        self.workerImage = Image(self)
-        self.threadImage = PyQt5.QtCore.QThread()
-        self.workerImage.moveToThread(self.threadImage)
-        self.threadImage.start()
-        self.workerPlatesolve = Platesolve(self)
-        self.threadPlatesolve = PyQt5.QtCore.QThread()
-        self.workerPlatesolve.moveToThread(self.threadPlatesolve)
-        self.threadPlatesolve.start()
-
         # counter for thread timing
         self.counter = 0
         self.chooserLock = threading.Lock()
@@ -192,10 +81,9 @@ class Modeling(PyQt5.QtCore.QThread):
         self.modelRun = False
         self.modelAnalyseData = []
         self.modelData = {}
+        self.counter = 0
         # setting the config up
         self.initConfig()
-        # run it first, to set all imaging applications up
-        self.chooseImagingApp()
 
     def initConfig(self):
         if self.NoneCam.appAvailable:
@@ -223,8 +111,6 @@ class Modeling(PyQt5.QtCore.QThread):
             self.logger.error('item in config.cfg not be initialize, error:{0}'.format(e))
         finally:
             pass
-        # connect change in imaging app to the subroutine of setting it up
-        self.app.ui.pd_chooseImagingApp.currentIndexChanged.connect(self.chooseImagingApp)
 
     def storeConfig(self):
         self.app.config['ImagingApplication'] = self.app.ui.pd_chooseImagingApp.currentIndex()
@@ -256,6 +142,12 @@ class Modeling(PyQt5.QtCore.QThread):
         self.chooserLock.release()
 
     def run(self):
+        if platform.system() == 'Windows':
+            pythoncom.CoInitialize()
+        # run it first, to set all imaging applications up
+        self.chooseImagingApp()
+        # connect change in imaging app to the subroutine of setting it up
+        self.app.ui.pd_chooseImagingApp.currentIndexChanged.connect(self.chooseImagingApp)
         # start first time the loop for status updates
         self.getStatusFast()
         while self.isRunning:
@@ -399,10 +291,15 @@ class Modeling(PyQt5.QtCore.QThread):
             elif command == 'DeletePoints':
                 self.modelPoints.deletePoints()
                 self.signalModelRedraw.emit(True)
+            self.counter += 1
+            if self.counter % 5 == 0:
+                self.getStatusFast()
             time.sleep(0.2)
             PyQt5.QtWidgets.QApplication.processEvents()
 
     def stop(self):
+        if platform.system() == 'Windows':
+            pythoncom.CoUninitialize()
         self.isRunning = False
 
     def cancelModeling(self):
@@ -425,8 +322,6 @@ class Modeling(PyQt5.QtCore.QThread):
             self.signalModelConnected.emit(2)
         if self.imagingHandler.cameraConnected:
             self.signalModelConnected.emit(3)
-        if self.isRunning:
-            PyQt5.QtCore.QTimer.singleShot(self.CYCLESTATUSFAST, self.getStatusFast)
 
     def runBoostModeling(self, simulation):
         # loading test data

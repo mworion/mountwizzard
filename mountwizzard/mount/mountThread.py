@@ -673,6 +673,8 @@ class Mount(PyQt5.QtCore.QThread):
         fw = self.data['FirmwareNumber'].split('.')
         if len(fw) == 3:
             self.data['FW'] = int(float(fw[0]) * 10000 + float(fw[1]) * 100 + float(fw[2]))
+        else:
+            self.data['FW'] = 0
         self.data['FirmwareProductName'] = self.mountHandler.sendCommand('GVP')
         self.data['FirmwareTime'] = self.mountHandler.sendCommand('GVT')
         self.data['HardwareVersion'] = self.mountHandler.sendCommand('GVZ')

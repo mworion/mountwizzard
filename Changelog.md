@@ -1,4 +1,7 @@
 # Changelog
+2.5.22
+- possible bugfix for maximdl
+
 2.5.21
 - bugfix: rollback change
 
