@@ -1,4 +1,7 @@
 # Changelog
+2.5.21
+- bugfix: rollback change
+
 2.5.20
 - bugfix
 - added some backward compatibility to older firmwares

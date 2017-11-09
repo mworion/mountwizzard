@@ -87,12 +87,9 @@ class ModelWorker:
                 simulation = self.app.ui.checkSimulation.isChecked()
                 keepImages = self.app.ui.checkKeepImages.isChecked()
                 refinePoints = self.runModel('Refinement', self.app.modeling.modelPoints.RefinementPoints, directory, settlingTime, simulation, keepImages)
-                if self.app.ui.checkKeepRefinement.isChecked():
-                    for i in range(0, len(refinePoints)):
-                        refinePoints[i]['Index'] += len(self.modelData)
-                    self.modelData = self.modelData + refinePoints
-                else:
-                    self.modelData = refinePoints
+                for i in range(0, len(refinePoints)):
+                    refinePoints[i]['Index'] += len(self.modelData)
+                self.modelData = self.modelData + refinePoints
                 self.modelData = self.app.mount.retrofitMountData(self.modelData)
                 name = directory + '_refinement.dat'
                 if len(self.modelData) > 0:
