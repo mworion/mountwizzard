@@ -1,4 +1,10 @@
 # Changelog
+2.5.23
+- bugfix ip address mount reconnect
+- added thread id's in logfile
+- bugfix polar plot visible
+- bugfix for modelData
+
 2.5.22
 - possible bugfix for maximdl
 
