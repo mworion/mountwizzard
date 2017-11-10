@@ -942,7 +942,7 @@ if __name__ == "__main__":
     name = 'mount.{0}.log'.format(datetime.datetime.now().strftime("%Y-%m-%d"))
     handler = logging.handlers.RotatingFileHandler(name, backupCount=3)
     logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s [%(levelname)7s][%(filename)20s][%(lineno)5s][%(funcName)20s] - %(message)s',
+                        format='%(asctime)s [%(levelname)7s][%(filename)20s][%(lineno)5s][%(thread)5d][%(funcName)20s] - %(message)s',
                         handlers=[handler], datefmt='%Y-%m-%d %H:%M:%S')
 
     if not os.path.isdir(os.getcwd() + '/analysedata'):
