@@ -458,10 +458,6 @@ class MountWizzardApp(widget.MwWidget):
                 self.ui.numberRunsHysterese.setValue(self.config['NumberRunsHysterese'])
             if 'DelayTimeHysterese' in self.config:
                 self.ui.delayTimeHysterese.setValue(self.config['DelayTimeHysterese'])
-            if 'MountIP' in self.config:
-                self.ui.le_mountIP.setText(self.config['MountIP'])
-            if 'MountMAC' in self.config:
-                self.ui.le_mountMAC.setText(self.config['MountMAC'])
             if 'WindowPositionX' in self.config:
                 self.move(self.config['WindowPositionX'], self.config['WindowPositionY'])
             if 'CheckRemoteAccess' in self.config:
@@ -525,8 +521,6 @@ class MountWizzardApp(widget.MwWidget):
         self.config['AzimuthHysterese2'] = self.ui.azimuthHysterese2.value()
         self.config['NumberRunsHysterese'] = self.ui.numberRunsHysterese.value()
         self.config['DelayTimeHysterese'] = self.ui.delayTimeHysterese.value()
-        self.config['MountIP'] = self.ui.le_mountIP.text()
-        self.config['MountMAC'] = self.ui.le_mountMAC.text()
         self.config['CheckClearModelFirst'] = self.ui.checkClearModelFirst.isChecked()
         self.config['CheckKeepRefinement'] = self.ui.checkKeepRefinement.isChecked()
         self.config['CheckRemoteAccess'] = self.ui.checkRemoteAccess.isChecked()

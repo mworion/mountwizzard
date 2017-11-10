@@ -92,6 +92,10 @@ class Mount(PyQt5.QtCore.QThread):
                 self.app.ui.checkAutoRefractionCamera.setChecked(self.app.config['CheckAutoRefractionCamera'])
             if 'CheckAutoRefractionNotTracking' in self.app.config:
                 self.app.ui.checkAutoRefractionNotTracking.setChecked(self.app.config['CheckAutoRefractionNotTracking'])
+            if 'MountIP' in self.app.config:
+                self.app.ui.le_mountIP.setText(self.app.config['MountIP'])
+            if 'MountMAC' in self.app.config:
+                self.app.ui.le_mountMAC.setText(self.app.config['MountMAC'])
 
         except Exception as e:
             self.logger.error('item in config.cfg not be initialize, error:{0}'.format(e))
@@ -105,6 +109,8 @@ class Mount(PyQt5.QtCore.QThread):
         self.app.config['MountConnection'] = self.app.ui.pd_chooseMountConnection.currentIndex()
         self.app.config['CheckAutoRefractionCamera'] = self.app.ui.checkAutoRefractionCamera.isChecked()
         self.app.config['CheckAutoRefractionNotTracking'] = self.app.ui.checkAutoRefractionNotTracking.isChecked()
+        self.app.config['MountIP'] = self.app.ui.le_mountIP.text()
+        self.app.config['MountMAC'] = self.app.ui.le_mountMAC.text()
 
     def showConfigEntries(self, index):
         if index == 0:
