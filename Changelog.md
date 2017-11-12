@@ -1,4 +1,7 @@
 # Changelog
+2.5.24
+- bugfix for slewing dome
+
 2.5.23
 - bugfix ip address mount reconnect
 - added thread id's in logfile

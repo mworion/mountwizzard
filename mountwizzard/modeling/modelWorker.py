@@ -221,7 +221,7 @@ class ModelWorker:
                     self.logger.info('Modeling cancelled after mount slewing')
                     break
                 time.sleep(0.1)
-            while self.app.mount.slewing or self.app.dome.slewing:
+            while self.app.mount.data['Slewing'] or self.app.dome.slewing:
                 if self.app.modeling.cancel:
                     self.logger.info('Modeling cancelled after dome slewing')
                     break
