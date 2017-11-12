@@ -1,4 +1,7 @@
 # Changelog
+2.5.25
+- bugfix for save Actual model
+
 2.5.24
 - bugfix for slewing dome
 

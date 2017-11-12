@@ -548,8 +548,8 @@ class MountWizzardApp(widget.MwWidget):
         self.relays.storeConfig()
         self.INDIworker.storeConfig()
         try:
-            if not os.path.isdir(os.getcwd() + '/config'):                                                                  # if config dir doesn't exist, make it
-                os.makedirs(os.getcwd() + '/config')                                                                        # if path doesn't exist, generate is
+            if not os.path.isdir(os.getcwd() + '/config'):
+                os.makedirs(os.getcwd() + '/config')
             with open('config/config.cfg', 'w') as outfile:
                 json.dump(self.config, outfile)
             outfile.close()
@@ -557,7 +557,7 @@ class MountWizzardApp(widget.MwWidget):
             self.messageQueue.put('Config.cfg could not be saved !')
             self.logger.error('Item in config.cfg not saved error {0}'.format(e))
             return
-        self.mount.saveActualModel()                                                                                        # save current loaded modeling from mount
+        self.mount.saveActualModel()
 
     def saveConfigQuit(self):
         self.saveConfigData()
@@ -936,7 +936,7 @@ if __name__ == "__main__":
         logging.error(traceback.format_exception(typeException, valueException, tbackException))
         sys.__excepthook__(typeException, valueException, tbackException)                                                   # then call the default handler
 
-    BUILD_NO = '2.5.24 beta'
+    BUILD_NO = '2.5.25 beta'
 
     warnings.filterwarnings("ignore")
     name = 'mount.{0}.log'.format(datetime.datetime.now().strftime("%Y-%m-%d"))
