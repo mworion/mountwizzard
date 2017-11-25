@@ -2577,7 +2577,7 @@ class Ui_MainWindow(object):
         self.pixelSize.setGeometry(QtCore.QRect(240, 280, 51, 22))
         self.pixelSize.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.pixelSize.setDecimals(1)
-        self.pixelSize.setMaximum(10.0)
+        self.pixelSize.setMaximum(25.0)
         self.pixelSize.setSingleStep(0.1)
         self.pixelSize.setProperty("value", 3.7)
         self.pixelSize.setObjectName("pixelSize")

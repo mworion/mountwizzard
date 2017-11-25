@@ -1,4 +1,7 @@
 # Changelog
+2.5.26
+- Camera Pix Size > 10um
+
 2.5.25
 - bugfix for save Actual model
 
