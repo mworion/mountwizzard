@@ -2,9 +2,9 @@
 
 #### Application for use in 10micron Mount environment
 Supports SGPro, TheSkyX, Stickstation, MBox, UniHedron SQR, OpenWeather and some more ASCOM parts
-(C) Michael Würtenberger 2016, 2017
+(C) Michael Würtenberger 2016, 2017, 2018
 
-#### Version release: 2.4, test version actual 2.5.26 beta
+#### Version release: 2.6
 
 [Link to the extended documentation and handbook of MountWizzard](./docu/home.md)
 

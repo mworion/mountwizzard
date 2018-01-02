@@ -11675,9 +11675,9 @@ color: rgb(255,255,255);</string>
       <widget class="QLabel" name="le_firmwareProductName_2">
        <property name="geometry">
         <rect>
-         <x>420</x>
+         <x>370</x>
          <y>400</y>
-         <width>301</width>
+         <width>351</width>
          <height>21</height>
         </rect>
        </property>
@@ -11688,7 +11688,7 @@ color: rgb(255,255,255);</string>
         </font>
        </property>
        <property name="text">
-        <string>MountWizzard 2 (C) 2016, 2017 MWORION</string>
+        <string>MountWizzard 2 (C) 2016, 2017,2018  MWORION</string>
        </property>
       </widget>
       <widget class="QLabel" name="firmwareProductName_6">

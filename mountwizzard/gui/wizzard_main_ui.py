@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'wizzard_main_ui.ui'
 #
-# Created by: PyQt5 UI code generator 5.9
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -3895,7 +3895,7 @@ class Ui_MainWindow(object):
         self.firmwareProductName_2.setFont(font)
         self.firmwareProductName_2.setObjectName("firmwareProductName_2")
         self.le_firmwareProductName_2 = QtWidgets.QLabel(self.tab_11)
-        self.le_firmwareProductName_2.setGeometry(QtCore.QRect(420, 400, 301, 21))
+        self.le_firmwareProductName_2.setGeometry(QtCore.QRect(370, 400, 351, 21))
         font = QtGui.QFont()
         font.setFamily("Courier")
         font.setPointSize(10)
@@ -4799,7 +4799,7 @@ class Ui_MainWindow(object):
         self.le_firmwareProductName.setText(_translate("MainWindow", "Product Number"))
         self.le_firmwareDate.setText(_translate("MainWindow", "Firmware Date"))
         self.firmwareProductName_2.setText(_translate("MainWindow", "Product:"))
-        self.le_firmwareProductName_2.setText(_translate("MainWindow", "MountWizzard 2 (C) 2016, 2017 MWORION"))
+        self.le_firmwareProductName_2.setText(_translate("MainWindow", "MountWizzard 2 (C) 2016, 2017,2018  MWORION"))
         self.firmwareProductName_6.setText(_translate("MainWindow", "HW Version:"))
         self.label_56.setText(_translate("MainWindow", "Product Versions"))
         self.le_hardwareVersion.setText(_translate("MainWindow", "Hardware Version"))

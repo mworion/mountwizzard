@@ -1,4 +1,7 @@
 # Changelog
+2.6.0
+- release
+
 2.5.26
 - Camera Pix Size > 10um
 
