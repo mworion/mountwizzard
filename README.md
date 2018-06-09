@@ -1,4 +1,4 @@
-# MountWizzard <img src="docu/pics/mw.png" width='64' height='64'/>
+# MountWizzard2 <img src="docu/pics/mw.png" width='64' height='64'/>
 
 #### Application for use in 10micron Mount environment
 Supports SGPro, TheSkyX, Stickstation, MBox, UniHedron SQR, OpenWeather and some more ASCOM parts
@@ -8,7 +8,7 @@ Supports SGPro, TheSkyX, Stickstation, MBox, UniHedron SQR, OpenWeather and some
 
 [Link to the extended documentation and handbook of MountWizzard](./docu/home.md)
 
-### The next version MountWizzard3 in already in beta available:
+#### The next version MountWizzard3 in already in beta available:
 
 https://github.com/mworion/MountWizzard3-DIST
 
