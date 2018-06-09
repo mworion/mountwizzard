@@ -8,6 +8,10 @@ Supports SGPro, TheSkyX, Stickstation, MBox, UniHedron SQR, OpenWeather and some
 
 [Link to the extended documentation and handbook of MountWizzard](./docu/home.md)
 
+### The next version MountWizzard3 in already in beta available:
+
+https://github.com/mworion/MountWizzard3-DIST
+
 ## Features:
 - Imaging Software: Sequence Generator Pro and TheSkyX are supported. Please refer to their homepages for use.
 - Blind solve for base points. All options of imaging Software is accepted.
