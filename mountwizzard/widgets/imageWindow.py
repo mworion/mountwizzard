@@ -239,6 +239,25 @@ class ImagesWindow(widget.MwWidget):
             self.ui.cross3.setVisible(True)
             self.ui.cross4.setVisible(True)
 
+    def prepareCaptureImageSubframes(self, scale, sizeX, sizeY, canSubframe, modelData):
+        modelData['sizeX'] = 0
+        modelData['sizeY'] = 0
+        modelData['offX'] = 0
+        modelData['offY'] = 0
+        modelData['canSubframe'] = False
+        if canSubframe:
+            modelData['sizeX'] = int(sizeX * scale)
+            modelData['sizeY'] = int(sizeY * scale)
+            modelData['offX'] = int((sizeX - modelData['sizeX']) / 2)
+            modelData['offY'] = int((sizeY - modelData['sizeY']) / 2)
+            modelData['canSubframe'] = True
+        else:
+            self.logger.warning('prepareCaptureSubframe-> Camera does not support subframe.')
+        if 'binning' in modelData:
+            modelData['sizeX'] = int(modelData['sizeX'] / modelData['binning'])
+            modelData['sizeY'] = int(modelData['sizeY'] / modelData['binning'])
+        return modelData
+
     def exposeOnce(self):
         param = {'speed': 'HiSpeed',
                  'file': 'test.fit',
@@ -252,7 +271,7 @@ class ImagesWindow(widget.MwWidget):
         param['base_dir_images'] = self.app.modeling.IMAGEDIR + '/' + directory
         if not os.path.isdir(param['base_dir_images']):
             os.makedirs(param['base_dir_images'])
-        param = self.app.modeling.prepareCaptureImageSubframes(1, sizeX, sizeY, canSubframe, param)
+        param = self.prepareCaptureImageSubframes(1, sizeX, sizeY, canSubframe, param)
         number = 0
         while os.path.isfile(param['base_dir_images'] + '/' + self.BASENAME + '{0:04d}.fit'.format(number)):
             number += 1

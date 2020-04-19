@@ -113,6 +113,13 @@ class TheSkyX(MWCamera):
             success, response = self.sendCommand(command)
             solveTime = timeit.default_timer() - startTime
 
+        except Exception as e:
+            self.logger.error('error: {0}'.format(e))
+            return False, 'Request failed', modelData
+
+        self.logger.info(success, response)
+
+        try:
             if success:
                 captureResponse = json.loads(response)
 
@@ -127,6 +134,7 @@ class TheSkyX(MWCamera):
                     return False, 'Unsolved', modelData
             else:
                 return False, 'Request failed', modelData
+
         except Exception as e:
             self.logger.error('error: {0}'.format(e))
             return False, 'Request failed', modelData
