@@ -3,15 +3,17 @@
 block_cipher = None
 
 import sys
+import pkg_resources
+
 sys.modules['FixTk'] = None
 DISTPATH = '../dist'
 WORKPATH = '../build'
 
 a = Analysis(['mountwizzard\\mountwizzard.py'],
-             pathex=['C:\\Program Files (x86)\\Python35-32\\Lib\\site-packages\\PyQt5\\Qt\\bin', 'C:\\Users\\mw\\Projects\\mountwizzard\\mountwizzard'],
+             pathex=['C:\\Users\\mw\\PycharmProjects\\Envs\\mw\\Lib\\site-packages\\PyQt5\\Qt\\bin', 'C:\\Users\\mw\\PycharmProjects\\mountwizzard\\mountwizzard'],
              binaries=[],
              datas=[('mountwizzard\\model001.fit','.')],
-             hiddenimports=[],
+             hiddenimports = ['pkg_resources.py2_warn'],
              hookspath=[],
              runtime_hooks=[],
              excludes=['FixTk', 'tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter'],

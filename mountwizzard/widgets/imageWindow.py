@@ -240,47 +240,44 @@ class ImagesWindow(widget.MwWidget):
             self.ui.cross4.setVisible(True)
 
     def prepareCaptureImageSubframes(self, scale, sizeX, sizeY, canSubframe, modelData):
-        modelData['sizeX'] = 0
-        modelData['sizeY'] = 0
-        modelData['offX'] = 0
-        modelData['offY'] = 0
-        modelData['canSubframe'] = False
+        modelData['SizeX'] = 0
+        modelData['SizeY'] = 0
+        modelData['OffX'] = 0
+        modelData['OffY'] = 0
+        modelData['CanSubframe'] = False
         if canSubframe:
-            modelData['sizeX'] = int(sizeX * scale)
-            modelData['sizeY'] = int(sizeY * scale)
-            modelData['offX'] = int((sizeX - modelData['sizeX']) / 2)
-            modelData['offY'] = int((sizeY - modelData['sizeY']) / 2)
-            modelData['canSubframe'] = True
+            modelData['SizeX'] = int(sizeX * scale)
+            modelData['SizeY'] = int(sizeY * scale)
+            modelData['OffX'] = int((sizeX - modelData['SizeX']) / 2)
+            modelData['OffY'] = int((sizeY - modelData['SizeY']) / 2)
+            modelData['CanSubframe'] = True
         else:
             self.logger.warning('prepareCaptureSubframe-> Camera does not support subframe.')
-        if 'binning' in modelData:
-            modelData['sizeX'] = int(modelData['sizeX'] / modelData['binning'])
-            modelData['sizeY'] = int(modelData['sizeY'] / modelData['binning'])
+        if 'Binning' in modelData:
+            modelData['SizeX'] = int(modelData['SizeX'] / modelData['Binning'])
+            modelData['SizeY'] = int(modelData['SizeY'] / modelData['Binning'])
         return modelData
 
     def exposeOnce(self):
-        param = {'speed': 'HiSpeed',
-                 'file': 'test.fit',
+        param = {'Speed': 'HiSpeed',
+                 'File': 'test.fit',
                  }
         suc, mes, sizeX, sizeY, canSubframe, gainValue = self.app.modeling.imagingHandler.getCameraProps()
-        param['gainValue'] = gainValue
-        param['binning'] = self.app.ui.cameraBin.value()
-        param['exposure'] = self.app.ui.cameraExposure.value()
-        param['iso'] = self.app.ui.isoSetting.value()
+        param['GainValue'] = gainValue
+        param['Binning'] = self.app.ui.cameraBin.value()
+        param['Exposure'] = self.app.ui.cameraExposure.value()
+        param['Iso'] = self.app.ui.isoSetting.value()
         directory = time.strftime("%Y-%m-%d-exposure", time.gmtime())
-        param['base_dir_images'] = self.app.modeling.IMAGEDIR + '/' + directory
-        if not os.path.isdir(param['base_dir_images']):
-            os.makedirs(param['base_dir_images'])
+        param['BaseDirImages'] = self.app.modeling.IMAGEDIR + '/' + directory
+        if not os.path.isdir(param['BaseDirImages']):
+            os.makedirs(param['BaseDirImages'])
         param = self.prepareCaptureImageSubframes(1, sizeX, sizeY, canSubframe, param)
         number = 0
-        while os.path.isfile(param['base_dir_images'] + '/' + self.BASENAME + '{0:04d}.fit'.format(number)):
+        while os.path.isfile(param['BaseDirImages'] + '/' + self.BASENAME + '{0:04d}.fit'.format(number)):
             number += 1
-        param['file'] = self.BASENAME + '{0:04d}.fit'.format(number)
+        param['File'] = self.BASENAME + '{0:04d}.fit'.format(number)
         suc, mes, param = self.app.modeling.imagingHandler.getImage(param)
-        self.showFitsImage(param['imagepath'])
-        '''
-        self.showFitsImage('c:/temp/t2.fit')
-        '''
+        self.showFitsImage(param['ImagePath'])
 
     def exposeContinuous(self):
         pass
